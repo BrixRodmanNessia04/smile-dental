@@ -53,6 +53,7 @@ export type AppointmentFormState = {
   status: "idle" | "error" | "success";
   message?: string;
   errors?: AppointmentFieldErrors;
+  appointmentId?: string;
 };
 
 export const INITIAL_APPOINTMENT_FORM_STATE: AppointmentFormState = {

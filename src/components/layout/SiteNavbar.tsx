@@ -1,12 +1,13 @@
 import Link from "next/link";
 
 import BrandLogo from "@/components/brand/BrandLogo";
-import { AUTH_ROUTES, MARKETING_ROUTES } from "@/lib/constants/routes";
+import { MARKETING_ROUTES } from "@/lib/constants/routes";
 
 const NAV_ITEMS = [
+  { href: MARKETING_ROUTES.HOME, label: "Home" },
   { href: MARKETING_ROUTES.SERVICES, label: "Services" },
-  { href: MARKETING_ROUTES.UPDATES, label: "Updates" },
   { href: MARKETING_ROUTES.CONTACT, label: "Contact" },
+  { href: MARKETING_ROUTES.BOOK_APPOINTMENT, label: "Book Appointment" },
 ] as const;
 
 export default function SiteNavbar() {
@@ -31,12 +32,6 @@ export default function SiteNavbar() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
-          <Link
-            className="rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
-            href={AUTH_ROUTES.PATIENT_LOGIN}
-          >
-            Patient Login
-          </Link>
           <Link
             className="rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-accent-foreground shadow-sm transition hover:brightness-95"
             href={MARKETING_ROUTES.BOOK_APPOINTMENT}
@@ -66,15 +61,9 @@ export default function SiteNavbar() {
               ))}
             </nav>
 
-            <div className="mt-3 grid gap-2 border-t border-border pt-3">
+            <div className="mt-3 border-t border-border pt-3">
               <Link
-                className="rounded-lg border border-border px-3 py-2 text-center text-sm font-medium text-foreground transition hover:bg-muted"
-                href={AUTH_ROUTES.PATIENT_LOGIN}
-              >
-                Patient Login
-              </Link>
-              <Link
-                className="rounded-lg bg-accent px-3 py-2 text-center text-sm font-semibold text-accent-foreground transition hover:brightness-95"
+                className="block rounded-lg bg-accent px-3 py-3 text-center text-sm font-semibold text-accent-foreground transition hover:brightness-95"
                 href={MARKETING_ROUTES.BOOK_APPOINTMENT}
               >
                 Book Appointment

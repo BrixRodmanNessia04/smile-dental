@@ -1,36 +1,103 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useActionState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useTransition } from "react";
 
+import { finalizePatientSignIn } from "@/features/auth/actions/signInPatient";
+import { signInSchema } from "@/features/auth/schemas/signIn.schema";
 import { AUTH_ROUTES } from "@/lib/constants/routes";
+import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
-import { signInPatient } from "@/features/auth/actions/signInPatient";
-import {
-  INITIAL_AUTH_ACTION_STATE,
-  type AuthActionState,
-} from "@/features/auth/types";
+import type { AuthFieldErrors } from "@/features/auth/types";
 
 import PasswordField from "./PasswordField";
 
+const isConnectTimeoutError = (error: unknown) => {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const maybeCause = "cause" in error ? error.cause : null;
+  if (maybeCause && typeof maybeCause === "object" && "code" in maybeCause) {
+    return String(maybeCause.code).toUpperCase() === "UND_ERR_CONNECT_TIMEOUT";
+  }
+
+  return false;
+};
+
 export default function PatientLoginForm() {
-  const [state, formAction, isPending] = useActionState<AuthActionState, FormData>(
-    signInPatient,
-    INITIAL_AUTH_ACTION_STATE,
-  );
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<AuthFieldErrors>({});
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
   const searchParams = useSearchParams();
 
   const oauthError = searchParams.get("error");
 
+  const handleSubmit = (formData: FormData) => {
+    startTransition(async () => {
+      setErrorMessage(null);
+      setFieldErrors({});
+
+      const parsed = signInSchema.safeParse({
+        email: formData.get("email"),
+        password: formData.get("password"),
+      });
+
+      if (!parsed.success) {
+        setFieldErrors(parsed.error.flatten().fieldErrors);
+        setErrorMessage("Please fix the validation errors.");
+        return;
+      }
+
+      try {
+        const supabase = createBrowserSupabaseClient();
+        const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
+
+        if (error) {
+          setErrorMessage(error.message || "Invalid email or password.");
+          return;
+        }
+
+        if (!data.user) {
+          setErrorMessage("Unable to sign you in right now.");
+          return;
+        }
+
+        const syncResult = await finalizePatientSignIn();
+        if (syncResult.status === "error") {
+          await supabase.auth.signOut();
+          setErrorMessage(syncResult.message || "Unable to sign you in right now.");
+          return;
+        }
+
+        router.replace(AUTH_ROUTES.PATIENT_HOME);
+        router.refresh();
+      } catch (error) {
+        console.error("[auth] patient_login_browser_exception", {
+          error,
+        });
+
+        if (isConnectTimeoutError(error)) {
+          setErrorMessage(
+            "Unable to reach the sign-in service right now. Please try again in a moment.",
+          );
+          return;
+        }
+
+        setErrorMessage("Unable to sign you in right now. Please try again.");
+      }
+    });
+  };
+
   return (
-    <form action={formAction} className="space-y-4">
+    <form
+      action={handleSubmit}
+      className="space-y-4"
+    >
       {oauthError ? <p className="text-sm text-red-600">{oauthError}</p> : null}
-      {state.message ? (
-        <p className={state.status === "success" ? "text-sm text-green-700" : "text-sm text-red-600"}>
-          {state.message}
-        </p>
-      ) : null}
+      {errorMessage ? <p className="text-sm text-red-600">{errorMessage}</p> : null}
 
       <div className="space-y-2">
         <label className="block text-sm font-medium text-slate-700" htmlFor="email">
@@ -44,12 +111,12 @@ export default function PatientLoginForm() {
           required
           type="email"
         />
-        {state.errors?.email?.[0] ? <p className="text-sm text-red-600">{state.errors.email[0]}</p> : null}
+        {fieldErrors.email?.[0] ? <p className="text-sm text-red-600">{fieldErrors.email[0]}</p> : null}
       </div>
 
       <PasswordField
         autoComplete="current-password"
-        error={state.errors?.password?.[0]}
+        error={fieldErrors.password?.[0]}
         id="password"
         label="Password"
         name="password"

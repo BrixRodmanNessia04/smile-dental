@@ -20,6 +20,16 @@ export type AuthServiceResult =
       message: string;
     };
 
+const AUTH_NETWORK_FAILURE_MESSAGE =
+  "Unable to reach the sign-in service right now. Please try again in a moment.";
+const NETWORK_SIGN_IN_MAX_ATTEMPTS = 2;
+const NETWORK_SIGN_IN_RETRY_DELAY_MS = 250;
+
+type ServerSupabaseClient = Awaited<ReturnType<typeof createServerSupabaseClient>>;
+type SignInWithPasswordResult = Awaited<
+  ReturnType<ServerSupabaseClient["auth"]["signInWithPassword"]>
+>;
+
 const getPatientOAuthCallbackUrl = () => {
   const callbackUrl = new URL(AUTH_ROUTES.OAUTH_CALLBACK, env.NEXT_PUBLIC_SITE_URL);
   callbackUrl.searchParams.set("next", AUTH_ROUTES.PATIENT_HOME);
@@ -36,6 +46,122 @@ const isEmailRateLimitError = (errorMessage: string | null | undefined) =>
 
 const isAlreadyRegisteredError = (errorMessage: string | null | undefined) =>
   /already registered|already exists|user already/i.test(errorMessage ?? "");
+
+const getEmailDomain = (email: string) => {
+  const [, domain] = email.split("@");
+  return domain || "unknown";
+};
+
+const getErrorCode = (error: unknown): string | null => {
+  if (!error || typeof error !== "object") {
+    return null;
+  }
+
+  if ("code" in error && typeof error.code === "string") {
+    return error.code;
+  }
+
+  if ("cause" in error && error.cause && typeof error.cause === "object" && "code" in error.cause) {
+    const causeCode = error.cause.code;
+    return typeof causeCode === "string" ? causeCode : null;
+  }
+
+  return null;
+};
+
+const getErrorMessageFromUnknown = (error: unknown): string | null => {
+  if (!error || typeof error !== "object") {
+    return null;
+  }
+
+  if ("message" in error && typeof error.message === "string") {
+    return error.message;
+  }
+
+  if ("cause" in error && error.cause && typeof error.cause === "object" && "message" in error.cause) {
+    const causeMessage = error.cause.message;
+    return typeof causeMessage === "string" ? causeMessage : null;
+  }
+
+  return null;
+};
+
+const isConnectTimeoutError = (error: unknown) => {
+  const code = getErrorCode(error);
+  if (code?.toUpperCase() === "UND_ERR_CONNECT_TIMEOUT") {
+    return true;
+  }
+
+  const message = getErrorMessageFromUnknown(error)?.toLowerCase() ?? "";
+  return message.includes("connect timeout") || message.includes("fetch failed");
+};
+
+const getFriendlySignInErrorMessage = (
+  error: unknown,
+  fallback: string,
+) => {
+  if (isConnectTimeoutError(error)) {
+    return AUTH_NETWORK_FAILURE_MESSAGE;
+  }
+
+  const message = getErrorMessageFromUnknown(error);
+  return getErrorMessage(message, fallback);
+};
+
+const logAuthFailure = (input: {
+  flow: string;
+  email: string;
+  error: unknown;
+}) => {
+  const payload = {
+    flow: input.flow,
+    emailDomain: getEmailDomain(input.email),
+    code: getErrorCode(input.error),
+    message: getErrorMessageFromUnknown(input.error),
+  };
+
+  if (isConnectTimeoutError(input.error)) {
+    console.warn("[auth] retryable network failure", payload);
+    return;
+  }
+
+  console.error("[auth] failure", {
+    ...payload,
+    error: input.error,
+  });
+};
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function signInWithPasswordWithRetry(
+  supabase: ServerSupabaseClient,
+  input: SignInInput,
+): Promise<SignInWithPasswordResult> {
+  for (let attempt = 1; attempt <= NETWORK_SIGN_IN_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      const result = await supabase.auth.signInWithPassword({
+        email: input.email,
+        password: input.password,
+      });
+
+      if (
+        !result.error ||
+        !isConnectTimeoutError(result.error) ||
+        attempt === NETWORK_SIGN_IN_MAX_ATTEMPTS
+      ) {
+        return result;
+      }
+    } catch (error) {
+      if (!isConnectTimeoutError(error) || attempt === NETWORK_SIGN_IN_MAX_ATTEMPTS) {
+        throw error;
+      }
+    }
+
+    await sleep(NETWORK_SIGN_IN_RETRY_DELAY_MS * attempt);
+  }
+
+  throw new Error("Sign-in retries exhausted unexpectedly.");
+}
 
 async function registerPatientWithAdminFallback(input: SignUpInput): Promise<AuthServiceResult> {
   if (!env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -94,12 +220,35 @@ async function registerPatientWithAdminFallback(input: SignUpInput): Promise<Aut
   }
 
   const supabase = await createServerSupabaseClient();
-  const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-    email: input.email,
-    password: input.password,
-  });
+  let signInData: Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>["data"] | null =
+    null;
+  let signInError: Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>["error"] | null =
+    null;
+  try {
+    const signInResult = await supabase.auth.signInWithPassword({
+      email: input.email,
+      password: input.password,
+    });
 
-  if (signInError || !signInData.user) {
+    signInData = signInResult.data;
+    signInError = signInResult.error;
+  } catch (error) {
+    logAuthFailure({
+      flow: "register_patient_admin_fallback_signin_exception",
+      email: input.email,
+      error,
+    });
+  }
+
+  if (signInError || !signInData?.user) {
+    if (signInError) {
+      logAuthFailure({
+        flow: "register_patient_admin_fallback_signin_error",
+        email: input.email,
+        error: signInError,
+      });
+    }
+
     return {
       ok: true,
       requiresEmailVerification: true,
@@ -115,15 +264,35 @@ export async function signInPatientWithEmailPassword(
 ): Promise<AuthServiceResult> {
   const supabase = await createServerSupabaseClient();
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: input.email,
-    password: input.password,
-  });
+  let data: Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>["data"];
+  let error: Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>["error"];
+  try {
+    const result = await signInWithPasswordWithRetry(supabase, input);
+    data = result.data;
+    error = result.error;
+  } catch (authError) {
+    logAuthFailure({
+      flow: "patient_signin_exception",
+      email: input.email,
+      error: authError,
+    });
 
-  if (error) {
     return {
       ok: false,
-      message: getErrorMessage(error.message, "Invalid email or password."),
+      message: getFriendlySignInErrorMessage(authError, "Unable to sign you in right now."),
+    };
+  }
+
+  if (error) {
+    logAuthFailure({
+      flow: "patient_signin_error",
+      email: input.email,
+      error,
+    });
+
+    return {
+      ok: false,
+      message: getFriendlySignInErrorMessage(error, "Invalid email or password."),
     };
   }
 
@@ -148,15 +317,35 @@ export async function signInAdminWithEmailPassword(
 ): Promise<AuthServiceResult> {
   const supabase = await createServerSupabaseClient();
 
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: input.email,
-    password: input.password,
-  });
+  let data: Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>["data"];
+  let error: Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>["error"];
+  try {
+    const result = await signInWithPasswordWithRetry(supabase, input);
+    data = result.data;
+    error = result.error;
+  } catch (authError) {
+    logAuthFailure({
+      flow: "admin_signin_exception",
+      email: input.email,
+      error: authError,
+    });
 
-  if (error) {
     return {
       ok: false,
-      message: getErrorMessage(error.message, "Invalid email or password."),
+      message: getFriendlySignInErrorMessage(authError, "Unable to sign you in right now."),
+    };
+  }
+
+  if (error) {
+    logAuthFailure({
+      flow: "admin_signin_error",
+      email: input.email,
+      error,
+    });
+
+    return {
+      ok: false,
+      message: getFriendlySignInErrorMessage(error, "Invalid email or password."),
     };
   }
 

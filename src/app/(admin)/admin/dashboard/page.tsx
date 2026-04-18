@@ -15,8 +15,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { listAdminAppointments } from "@/features/appointments/services/appointment-query.service";
-import { getAdminPointsPayload } from "@/features/points/services/points-query.service";
 import { listAdminPosts } from "@/features/posts/services/post-query.service";
+import { USER_ROLES } from "@/lib/constants/roles";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 const formatDateTime = (date: string, time: string) =>
   new Intl.DateTimeFormat("en-US", {
@@ -25,21 +26,22 @@ const formatDateTime = (date: string, time: string) =>
   }).format(new Date(`${date}T${time}`));
 
 export default async function Page() {
-  const [appointmentsResult, pointsResult, postsResult] = await Promise.all([
+  const supabase = await createServerSupabaseClient();
+
+  const [appointmentsResult, postsResult, patientsResult] = await Promise.all([
     listAdminAppointments(),
-    getAdminPointsPayload(),
     listAdminPosts(),
+    supabase
+      .from("profiles")
+      .select("id, first_name, last_name, email, created_at")
+      .eq("role", USER_ROLES.PATIENT)
+      .order("created_at", { ascending: false }),
   ]);
 
   const appointments = appointmentsResult.ok ? appointmentsResult.data : [];
-  const patients = pointsResult.ok ? pointsResult.data.patients : [];
-  const transactions = pointsResult.ok ? pointsResult.data.transactions : [];
+  const patients = patientsResult.data ?? [];
   const posts = postsResult.ok ? postsResult.data : [];
-
-  const pointsDistributed = transactions.reduce(
-    (sum, transaction) => sum + (transaction.points > 0 ? transaction.points : 0),
-    0,
-  );
+  const publishedPosts = posts.filter((post) => post.status === "published").length;
 
   const recentAppointments = [...appointments]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -50,22 +52,22 @@ export default async function Page() {
   return (
     <div className="space-y-5">
       <Card className="border-primary/20 bg-gradient-to-r from-primary/10 to-background">
-        <CardContent className="flex flex-wrap items-end justify-between gap-4 p-6">
-          <div>
-            <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
+        <CardContent className="flex flex-wrap items-start justify-between gap-4 p-6">
+          <div className="min-w-0 flex-1">
+            <h1 className="break-words text-2xl font-semibold text-foreground">Dashboard</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Operational overview of appointments, patients, and content activity.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
             <Link
-              className="rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
+              className="w-full rounded-lg border border-border px-3 py-2 text-center text-sm font-medium text-foreground transition hover:bg-muted sm:w-auto"
               href="/admin/appointments"
             >
               View Appointments
             </Link>
             <Link
-              className="rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-accent-foreground transition hover:brightness-95"
+              className="w-full rounded-lg bg-accent px-3 py-2 text-center text-sm font-semibold text-accent-foreground transition hover:brightness-95 sm:w-auto"
               href="/admin/posts/new"
             >
               New Post
@@ -82,9 +84,9 @@ export default async function Page() {
         />
         <StatCard hint="Active patient profiles" label="Total Patients" value={patients.length} />
         <StatCard
-          hint="Points awarded to patients"
-          label="Points Distributed"
-          value={pointsDistributed}
+          hint="Posts visible on public pages"
+          label="Published Posts"
+          value={publishedPosts}
         />
       </div>
 
@@ -125,7 +127,7 @@ export default async function Page() {
               <TableBody>
                 {recentAppointments.map((appointment) => (
                   <TableRow key={appointment.id}>
-                    <TableCell className="font-medium">
+                    <TableCell className="max-w-[14rem] break-words font-medium sm:max-w-none">
                       {appointment.serviceName ?? appointment.serviceId}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
@@ -164,9 +166,9 @@ export default async function Page() {
             />
           </CardHeader>
           <CardContent>
-            {!pointsResult.ok ? (
+            {patientsResult.error ? (
               <p className="rounded-lg border border-destructive/30 bg-destructive-soft p-3 text-sm text-destructive">
-                {pointsResult.message}
+                Unable to load patient records.
               </p>
             ) : recentPatients.length === 0 ? (
               <EmptyState
@@ -178,9 +180,11 @@ export default async function Page() {
             ) : (
               <div className="space-y-2">
                 {recentPatients.map((patient) => (
-                  <article className="rounded-lg border border-border bg-card-strong p-3" key={patient.profileId}>
-                    <p className="text-sm font-semibold text-foreground">{patient.fullName}</p>
-                    <p className="text-sm text-muted-foreground">{patient.email}</p>
+                  <article className="rounded-lg border border-border bg-card-strong p-3" key={patient.id}>
+                    <p className="break-words text-sm font-semibold text-foreground">
+                      {`${patient.first_name ?? ""} ${patient.last_name ?? ""}`.trim() || patient.email}
+                    </p>
+                    <p className="break-all text-sm text-muted-foreground">{patient.email}</p>
                   </article>
                 ))}
               </div>
@@ -217,10 +221,12 @@ export default async function Page() {
                 {recentPosts.map((post) => (
                   <article className="rounded-lg border border-border bg-card-strong p-3" key={post.id}>
                     <div className="flex items-start justify-between gap-3">
-                      <p className="text-sm font-semibold text-foreground">{post.title}</p>
+                      <p className="min-w-0 flex-1 break-words text-sm font-semibold text-foreground">
+                        {post.title}
+                      </p>
                       <PostStatusBadge status={post.status} />
                     </div>
-                    <p className="mt-1 text-xs text-muted-foreground">/{post.slug}</p>
+                    <p className="mt-1 break-all text-xs text-muted-foreground">/{post.slug}</p>
                     <Link
                       className="mt-2 inline-flex text-sm font-semibold text-primary transition hover:text-primary-strong"
                       href={`/admin/posts/${post.id}`}

@@ -30,6 +30,7 @@ export const PATIENT_ROUTES = {
 export const ADMIN_ROUTES = {
   ROOT: "/admin",
   DASHBOARD: "/admin/dashboard",
+  INSIGHTS: "/admin/insights",
   APPOINTMENTS: "/admin/appointments",
   NOTIFICATIONS: "/admin/notifications",
   POINTS: "/admin/points",

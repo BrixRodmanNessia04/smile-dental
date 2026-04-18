@@ -1,12 +1,13 @@
 import Link from "next/link";
 
 import BrandLogo from "@/components/brand/BrandLogo";
-import { AUTH_ROUTES, MARKETING_ROUTES } from "@/lib/constants/routes";
+import { MARKETING_ROUTES } from "@/lib/constants/routes";
 
 const LINKS = [
+  { href: MARKETING_ROUTES.HOME, label: "Home" },
   { href: MARKETING_ROUTES.SERVICES, label: "Services" },
-  { href: MARKETING_ROUTES.UPDATES, label: "Updates" },
   { href: MARKETING_ROUTES.CONTACT, label: "Contact" },
+  { href: MARKETING_ROUTES.BOOK_APPOINTMENT, label: "Book Appointment" },
 ] as const;
 
 export default function SiteFooter() {
@@ -40,15 +41,15 @@ export default function SiteFooter() {
           <h2 className="text-sm font-semibold text-foreground">Contact</h2>
           <p className="text-sm text-muted-foreground">support@onedental.com</p>
           <p className="text-sm text-muted-foreground">(555) 123-4567</p>
-          <div className="pt-1">
-            <Link
-              className="inline-flex rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
-              href={AUTH_ROUTES.PATIENT_LOGIN}
-            >
-              Patient Portal
-            </Link>
-          </div>
+          <p className="text-sm text-muted-foreground">123 One Dental Avenue, Dental City</p>
         </section>
+      </div>
+
+      <div className="border-t border-border bg-background/30">
+        <div className="mx-auto flex w-full max-w-7xl justify-between gap-3 px-4 py-4 text-xs text-muted-foreground md:px-6 lg:px-8">
+          <p>© {new Date().getFullYear()} One Dental. All rights reserved.</p>
+          <p>Patient-first care, modern booking experience.</p>
+        </div>
       </div>
     </footer>
   );

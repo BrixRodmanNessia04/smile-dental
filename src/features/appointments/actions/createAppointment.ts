@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 
 import {
   createAppointmentSchema,
@@ -37,5 +36,11 @@ export async function createAppointment(
   }
 
   revalidatePath("/patient/appointments");
-  redirect(`/patient/appointments/${result.data.id}`);
+  revalidatePath("/book-appointment");
+
+  return {
+    status: "success",
+    message: "Appointment request sent. Our team will confirm your schedule shortly.",
+    appointmentId: result.data.id,
+  };
 }

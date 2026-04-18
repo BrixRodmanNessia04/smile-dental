@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import AppointmentStatusBadge from "@/components/appointments/AppointmentStatusBadge";
+import SectionHeader from "@/components/shared/SectionHeader";
+import StatCard from "@/components/shared/StatCard";
 import Card, {
   CardContent,
   CardDescription,
@@ -8,10 +10,7 @@ import Card, {
   CardTitle,
 } from "@/components/ui/card";
 import EmptyState from "@/components/ui/empty-state";
-import SectionHeader from "@/components/shared/SectionHeader";
-import StatCard from "@/components/shared/StatCard";
 import { listPatientAppointments } from "@/features/appointments/services/appointment-query.service";
-import { getMyNotificationsPayload } from "@/features/notifications/services/notification-query.service";
 import { getPatientPointsPayload } from "@/features/points/services/points-query.service";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -51,37 +50,38 @@ function isUpcoming(date: string, startTime: string) {
 }
 
 export default async function Page() {
-  const [patientName, appointmentsResult, pointsResult, notificationsResult] = await Promise.all([
+  const [patientName, appointmentsResult, pointsResult] = await Promise.all([
     getPatientName(),
     listPatientAppointments(),
     getPatientPointsPayload(),
-    getMyNotificationsPayload(),
   ]);
 
-  const upcomingAppointment = appointmentsResult.ok
-    ? [...appointmentsResult.data]
-        .filter((appointment) =>
-          ["pending", "approved", "rescheduled"].includes(appointment.status),
-        )
-        .filter((appointment) => isUpcoming(appointment.appointmentDate, appointment.startTime))
-        .sort(
-          (a, b) =>
-            new Date(`${a.appointmentDate}T${a.startTime}`).getTime() -
-            new Date(`${b.appointmentDate}T${b.startTime}`).getTime(),
-        )[0]
-    : null;
+  const appointments = appointmentsResult.ok ? appointmentsResult.data : [];
 
-  const notifications = notificationsResult.ok
-    ? notificationsResult.data.notifications.slice(0, 4)
-    : [];
+  const upcomingAppointment = [...appointments]
+    .filter((appointment) =>
+      ["pending", "approved", "rescheduled"].includes(appointment.status),
+    )
+    .filter((appointment) => isUpcoming(appointment.appointmentDate, appointment.startTime))
+    .sort(
+      (a, b) =>
+        new Date(`${a.appointmentDate}T${a.startTime}`).getTime() -
+        new Date(`${b.appointmentDate}T${b.startTime}`).getTime(),
+    )[0];
+
+  const completedAppointments = appointments.filter(
+    (appointment) => appointment.status === "completed",
+  ).length;
 
   return (
     <div className="space-y-5">
       <Card className="border-primary/20 bg-gradient-to-r from-primary/10 to-background">
         <CardContent className="p-6">
-          <h1 className="text-2xl font-semibold text-foreground">Welcome back, {patientName}</h1>
+          <h1 className="break-words text-2xl font-semibold text-foreground">
+            Welcome back, {patientName}
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Manage appointments, points, and notifications from your One Dental dashboard.
+            Manage appointments, points, and your account from your One Dental dashboard.
           </p>
         </CardContent>
       </Card>
@@ -93,19 +93,19 @@ export default async function Page() {
           value={pointsResult.ok ? pointsResult.data.summary.totalPoints : "-"}
         />
         <StatCard
-          hint="Unread clinic updates"
-          label="Unread notifications"
-          value={notificationsResult.ok ? notificationsResult.data.unreadCount : "-"}
-        />
-        <StatCard
           hint="Total appointment records"
           label="Appointments"
-          value={appointmentsResult.ok ? appointmentsResult.data.length : "-"}
+          value={appointmentsResult.ok ? appointments.length : "-"}
         />
         <StatCard
           hint="Your next visit status"
           label="Upcoming visit"
           value={upcomingAppointment ? "Scheduled" : "None"}
+        />
+        <StatCard
+          hint="Visits marked as completed"
+          label="Completed visits"
+          value={appointmentsResult.ok ? completedAppointments : "-"}
         />
       </div>
 
@@ -132,8 +132,8 @@ export default async function Page() {
             ) : (
               <article className="rounded-lg border border-border bg-card-strong p-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <h2 className="text-lg font-semibold text-foreground">
+                  <div className="min-w-0">
+                    <h2 className="break-words text-lg font-semibold text-foreground">
                       {upcomingAppointment.serviceName ?? upcomingAppointment.serviceId}
                     </h2>
                     <p className="mt-1 text-sm text-muted-foreground">
@@ -147,7 +147,9 @@ export default async function Page() {
                 </div>
 
                 {upcomingAppointment.reason ? (
-                  <p className="mt-3 text-sm text-muted-foreground">Reason: {upcomingAppointment.reason}</p>
+                  <p className="mt-3 break-words text-sm text-muted-foreground">
+                    Reason: {upcomingAppointment.reason}
+                  </p>
                 ) : null}
 
                 <Link
@@ -199,66 +201,41 @@ export default async function Page() {
               <CardTitle>Quick Actions</CardTitle>
               <CardDescription>Jump to common patient tasks.</CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-2">
+            <CardContent className="grid gap-2 sm:grid-cols-2">
               <Link
-                className="rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-accent-foreground transition hover:brightness-95"
+                className="rounded-lg bg-accent px-3 py-2 text-center text-sm font-semibold text-accent-foreground transition hover:brightness-95 sm:col-span-2"
                 href="/patient/appointments/new"
               >
                 Book Appointment
               </Link>
               <Link
-                className="rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
+                className="rounded-lg border border-border px-3 py-2 text-center text-sm font-medium text-foreground transition hover:bg-muted"
+                href="/patient/appointments"
+              >
+                View Appointments
+              </Link>
+              <Link
+                className="rounded-lg border border-border px-3 py-2 text-center text-sm font-medium text-foreground transition hover:bg-muted"
                 href="/patient/points"
               >
                 View Points
               </Link>
               <Link
-                className="rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
-                href="/patient/appointments"
+                className="rounded-lg border border-border px-3 py-2 text-center text-sm font-medium text-foreground transition hover:bg-muted"
+                href="/patient/profile"
               >
-                View Appointments
+                Open Profile
+              </Link>
+              <Link
+                className="rounded-lg border border-border px-3 py-2 text-center text-sm font-medium text-foreground transition hover:bg-muted"
+                href="/patient/settings"
+              >
+                Open Settings
               </Link>
             </CardContent>
           </Card>
         </div>
       </div>
-
-      <Card>
-        <CardHeader>
-          <SectionHeader
-            action={
-              <Link className="text-sm font-semibold text-primary transition hover:text-primary-strong" href="/patient/notifications">
-                View all
-              </Link>
-            }
-            description="Latest updates from One Dental."
-            title="Notifications Preview"
-          />
-        </CardHeader>
-        <CardContent>
-          {!notificationsResult.ok ? (
-            <p className="rounded-lg border border-destructive/30 bg-destructive-soft p-3 text-sm text-destructive">
-              {notificationsResult.message}
-            </p>
-          ) : notifications.length === 0 ? (
-            <EmptyState
-              actionHref="/patient/notifications"
-              actionLabel="Open Notifications"
-              description="You are all caught up. New notifications will appear here."
-              title="No notifications yet"
-            />
-          ) : (
-            <div className="space-y-2">
-              {notifications.map((notification) => (
-                <article className="rounded-lg border border-border bg-card-strong p-3" key={notification.id}>
-                  <p className="text-sm font-semibold text-foreground">{notification.title}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{notification.message}</p>
-                </article>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }
