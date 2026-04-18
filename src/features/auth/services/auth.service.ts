@@ -107,12 +107,6 @@ async function registerPatientWithAdminFallback(input: SignUpInput): Promise<Aut
     };
   }
 
-  const syncResult = await syncPatientProfile(supabase, signInData.user);
-  if (!syncResult.ok) {
-    await supabase.auth.signOut();
-    return syncResult;
-  }
-
   return { ok: true };
 }
 
@@ -241,16 +235,6 @@ export async function registerPatientWithEmailPassword(
     };
   }
 
-  if (data.session) {
-    const syncResult = await syncPatientProfile(supabase, data.user);
-    if (!syncResult.ok) {
-      await supabase.auth.signOut();
-      return syncResult;
-    }
-
-    return { ok: true };
-  }
-
   if (env.SUPABASE_SERVICE_ROLE_KEY) {
     const adminSupabase = createAdminSupabaseClient();
     const provisionResult = await provisionPatientProfile(adminSupabase, {
@@ -265,6 +249,18 @@ export async function registerPatientWithEmailPassword(
         message: provisionResult.message,
       };
     }
+
+    if (data.session) {
+      return { ok: true };
+    }
+  } else if (data.session) {
+    const syncResult = await syncPatientProfile(supabase, data.user);
+    if (!syncResult.ok) {
+      await supabase.auth.signOut();
+      return syncResult;
+    }
+
+    return { ok: true };
   }
 
   return {
