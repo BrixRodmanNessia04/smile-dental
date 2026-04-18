@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+
 import Link from "next/link";
 
 // import OAuthButtons from "@/components/auth/OAuthButtons";
@@ -17,7 +19,9 @@ export default function Page() {
         <h1 className="mt-4 text-2xl font-semibold text-slate-900">Patient login</h1>
         <p className="mt-1 text-sm text-slate-600">Sign in to manage appointments and your profile.</p>
         <div className="mt-6 space-y-6">
-          <PatientLoginForm />
+          <Suspense fallback={<p className="text-sm text-slate-600">Loading login form...</p>}>
+            <PatientLoginForm />
+          </Suspense>
           {/* <OAuthButtons /> */}
         </div>
       </section>
