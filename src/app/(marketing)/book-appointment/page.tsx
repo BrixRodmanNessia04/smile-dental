@@ -18,7 +18,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 export const metadata: Metadata = buildPageMetadata({
   title: "Book an Appointment",
   description:
-    "Book your One Dental appointment using a guided mobile-friendly form with live service options.",
+    "Book your One Dental appointment using a guided mobile-friendly form and curated service options.",
   path: "/book-appointment",
   keywords: ["One Dental booking", "book dental appointment", "dental schedule"],
 });

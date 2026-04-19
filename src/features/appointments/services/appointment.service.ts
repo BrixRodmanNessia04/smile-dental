@@ -36,6 +36,7 @@ type ActorContext = {
   profileId: string;
   role: UserRole | null;
 };
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 const mapAppointment = (
   row: AppointmentRow,
@@ -122,15 +123,17 @@ async function getServiceByReference(
   supabase: SupabaseClient<Database>,
   serviceRef: string,
 ): Promise<ServiceRow | null> {
-  const byIdQuery = await supabase
-    .from("services")
-    .select("*")
-    .eq("id", serviceRef)
-    .eq("is_active", true)
-    .maybeSingle();
+  if (UUID_REGEX.test(serviceRef)) {
+    const byIdQuery = await supabase
+      .from("services")
+      .select("*")
+      .eq("id", serviceRef)
+      .eq("is_active", true)
+      .maybeSingle();
 
-  if (!byIdQuery.error && byIdQuery.data) {
-    return byIdQuery.data;
+    if (!byIdQuery.error && byIdQuery.data) {
+      return byIdQuery.data;
+    }
   }
 
   const bySlugQuery = await supabase
