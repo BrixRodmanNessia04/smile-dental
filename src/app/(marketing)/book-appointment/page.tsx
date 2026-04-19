@@ -2,31 +2,37 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import AppointmentForm from "@/components/appointments/AppointmentForm";
+import AppointmentHero from "@/components/marketing/AppointmentHero";
+import Button from "@/components/ui/button";
+import Card, { CardContent } from "@/components/ui/card";
 import {
-  listActiveServices,
   listAvailableSlots,
 } from "@/features/appointments/services/appointment-query.service";
 import { resolveUserRole } from "@/lib/auth/roles";
 import { USER_ROLES } from "@/lib/constants/roles";
 import { MARKETING_ROUTES } from "@/lib/constants/routes";
+import { getStaticAppointmentServices } from "@/lib/constants/services";
 import { buildPageMetadata } from "@/lib/seo/metadata";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Book an Appointment",
   description:
-    "Use One Dental's guided appointment flow to choose your service and preferred schedule in just a few steps.",
+    "Book your One Dental appointment using a guided mobile-friendly form with live service options.",
   path: "/book-appointment",
-  keywords: ["book dental appointment", "One Dental booking", "dentist schedule"],
+  keywords: ["One Dental booking", "book dental appointment", "dental schedule"],
 });
 
-const BOOKING_STEPS = [
-  "Choose your service and preferred schedule.",
-  "Submit your booking request in under 2 minutes.",
-  "Receive clinic confirmation and next-step guidance.",
-] as const;
+type BookingContext = {
+  role: ReturnType<typeof resolveUserRole>;
+  contact: {
+    fullName: string;
+    email: string;
+    phone: string;
+  };
+};
 
-async function getCurrentRole() {
+async function getBookingContext(): Promise<BookingContext | null> {
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -38,148 +44,117 @@ async function getCurrentRole() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, first_name, last_name, email, phone")
     .eq("auth_user_id", user.id)
     .maybeSingle();
 
-  return resolveUserRole(profile?.role, user);
+  const firstName = profile?.first_name?.trim() ?? "";
+  const lastName = profile?.last_name?.trim() ?? "";
+  const fullName = `${firstName} ${lastName}`.trim();
+
+  return {
+    role: resolveUserRole(profile?.role, user),
+    contact: {
+      fullName,
+      email: profile?.email ?? user.email ?? "",
+      phone: profile?.phone ?? "",
+    },
+  };
 }
 
 export default async function Page() {
-  const [role, servicesResult, slotsResult] = await Promise.all([
-    getCurrentRole(),
-    listActiveServices(),
+  const [bookingContext, slotsResult] = await Promise.all([
+    getBookingContext(),
     listAvailableSlots(),
   ]);
+  const staticServices = getStaticAppointmentServices();
 
+  const role = bookingContext?.role ?? null;
   const isPatient = role === USER_ROLES.PATIENT;
   const isAdmin = role === USER_ROLES.ADMIN;
-  const hasServices = servicesResult.ok && servicesResult.data.length > 0;
 
   return (
-    <main className="mx-auto w-full max-w-6xl space-y-6 px-4 py-8 md:px-6 md:py-10 lg:px-8 lg:py-12">
-      <section className="rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-8">
-        <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-          Appointment booking
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold text-foreground sm:text-4xl">
-          Book your visit in a few guided steps
-        </h1>
-        <p className="mt-3 max-w-3xl text-sm text-muted-foreground sm:text-base">
-          Share your preferred treatment and schedule. Our clinic team will review your request and
-          confirm your appointment details quickly.
-        </p>
+    <main className="mx-auto w-full max-w-7xl space-y-8 px-4 py-8 md:px-6 md:py-10 lg:px-8 lg:py-12">
+      <AppointmentHero />
 
-        <div className="mt-5 grid gap-2 sm:grid-cols-3">
-          {BOOKING_STEPS.map((step, index) => (
-            <article className="rounded-xl border border-border bg-card-strong p-3" key={step}>
-              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                Step {index + 1}
+      {isPatient ? (
+        <section className="grid gap-4 lg:grid-cols-[1fr_320px] lg:items-start">
+          <Card className="rounded-3xl border-border">
+            <CardContent className="p-4 sm:p-6">
+              <h2 className="text-2xl font-semibold text-primary">Appointment request form</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Complete each step below. Service options follow our One Dental MVP service lineup.
               </p>
-              <p className="mt-1 text-sm text-foreground">{step}</p>
-            </article>
-          ))}
-        </div>
-      </section>
 
-      {!isPatient ? (
-        <section className="rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-8">
-          <h2 className="text-xl font-semibold text-foreground">Start booking with your patient account</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            For secure appointment records, booking currently requires a patient account.
-          </p>
-
-          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-            {/* <Link
-              className="inline-flex h-11 items-center justify-center rounded-lg bg-accent px-4 text-sm font-semibold text-accent-foreground transition hover:brightness-95"
-              href={AUTH_ROUTES.PATIENT_REGISTER}
-            >
-              Create patient account
-            </Link> */}
-            <Link
-              className="inline-flex h-11 items-center justify-center rounded-lg border border-border bg-background px-4 text-sm font-medium text-foreground transition hover:bg-muted"
-              href={MARKETING_ROUTES.CONTACT}
-            >
-              Contact clinic
-            </Link>
-          </div>
-
-          {servicesResult.ok && servicesResult.data.length > 0 ? (
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              {servicesResult.data.slice(0, 4).map((service) => (
-                <article className="rounded-xl border border-border bg-card-strong p-4" key={service.id}>
-                  <p className="text-sm font-semibold text-foreground">{service.name}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Typical duration: {service.durationMinutes} minutes
-                  </p>
-                </article>
-              ))}
-            </div>
-          ) : null}
-        </section>
-      ) : null}
-
-      {isAdmin ? (
-        <p className="rounded-lg border border-warning-strong/30 bg-warning-soft px-4 py-3 text-sm text-warning-strong">
-          This account is signed in as admin. Please use a patient account to create appointments.
-        </p>
-      ) : null}
-
-      {!servicesResult.ok ? (
-        <p className="rounded-lg border border-destructive/30 bg-destructive-soft px-4 py-3 text-sm text-destructive">
-          {servicesResult.message}
-        </p>
-      ) : !hasServices ? (
-        <p className="rounded-lg border border-border bg-card px-4 py-4 text-sm text-muted-foreground">
-          No active services are available for booking right now. Please contact the clinic for
-          assistance.
-        </p>
-      ) : isPatient ? (
-        <section className="grid gap-4 lg:grid-cols-[1fr_300px] lg:items-start">
-          <article className="rounded-3xl border border-border bg-card p-4 shadow-sm sm:p-6">
-            <h2 className="text-xl font-semibold text-foreground">Appointment request form</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Complete the form below. All fields are optimized for mobile and desktop booking.
-            </p>
-
-            <div className="mt-5">
-              <AppointmentForm
-                services={servicesResult.data}
-                slots={slotsResult.ok ? slotsResult.data : []}
-              />
-            </div>
-          </article>
+              <div className="mt-5">
+                <AppointmentForm
+                  initialContact={bookingContext?.contact}
+                  services={staticServices}
+                  slots={slotsResult.ok ? slotsResult.data : []}
+                />
+              </div>
+            </CardContent>
+          </Card>
 
           <aside className="space-y-4">
-            <article className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-              <h3 className="text-sm font-semibold text-foreground">Booking reminders</h3>
-              <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-                <li>Choose one service that best matches your visit reason.</li>
-                <li>Use available slots when possible for faster confirmation.</li>
-                <li>Add notes so the clinic can prepare ahead of your appointment.</li>
-              </ul>
-            </article>
+            <Card className="rounded-2xl border-border bg-card-strong">
+              <CardContent className="p-5">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.08em] text-primary">
+                  Booking tips
+                </h3>
+                <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                  <li>Choose the service that best matches your concern.</li>
+                  <li>Use available slots for faster clinic confirmation.</li>
+                  <li>Add clear notes so the team can prepare in advance.</li>
+                </ul>
+              </CardContent>
+            </Card>
 
-            <article className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-              <h3 className="text-sm font-semibold text-foreground">What happens next</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                After submission, One Dental reviews your request and confirms schedule details.
-                Adjustments may be offered if your preferred time is unavailable.
-              </p>
-              <p className="mt-3 text-sm text-muted-foreground">
-                Need help now? <Link className="font-semibold text-primary hover:text-primary-strong" href={MARKETING_ROUTES.CONTACT}>Contact our clinic team</Link>.
-              </p>
-            </article>
+            <Card className="rounded-2xl border-border bg-card-strong">
+              <CardContent className="p-5">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.08em] text-primary">
+                  Need help now?
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  If you need immediate assistance, contact our clinic team and we&apos;ll guide you
+                  through the best next step.
+                </p>
+                <div className="mt-4">
+                  <Button asChild className="w-full" variant="outline">
+                    <Link href={MARKETING_ROUTES.CONTACT}>Contact clinic</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
             {!slotsResult.ok ? (
               <p className="rounded-lg border border-warning-strong/30 bg-warning-soft px-4 py-3 text-sm text-warning-strong">
-                Available slots could not be loaded. You can still submit your preferred date and
-                time.
+                Available slots could not be loaded. You can still submit preferred date and time.
               </p>
             ) : null}
           </aside>
         </section>
-      ) : null}
+      ) : (
+        <Card className="rounded-3xl border-border">
+          <CardContent className="p-5 sm:p-6">
+            <h2 className="text-2xl font-semibold text-primary">Booking access</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Online booking currently requires a patient account session. Please contact One Dental
+              so our team can help schedule your appointment.
+            </p>
+            {isAdmin ? (
+              <p className="mt-3 rounded-lg border border-warning-strong/30 bg-warning-soft px-3 py-2 text-sm text-warning-strong">
+                You are currently signed in as an admin account.
+              </p>
+            ) : null}
+            <div className="mt-4">
+              <Button asChild variant="accent">
+                <Link href={MARKETING_ROUTES.CONTACT}>Contact clinic</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </main>
   );
 }

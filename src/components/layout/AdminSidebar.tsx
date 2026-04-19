@@ -12,6 +12,7 @@ import Card, { CardContent } from "@/components/ui/card";
 const NAV_ITEMS = [
   { href: ADMIN_ROUTES.DASHBOARD, label: "Dashboard" },
   { href: ADMIN_ROUTES.INSIGHTS, label: "Insights" },
+  { href: ADMIN_ROUTES.SERVICES, label: "Services" },
   { href: ADMIN_ROUTES.APPOINTMENTS, label: "Appointments" },
   { href: ADMIN_ROUTES.PATIENTS, label: "Patients" },
   { href: ADMIN_ROUTES.POSTS, label: "Posts" },
@@ -23,7 +24,7 @@ export default function AdminSidebar() {
 
   return (
     <Card>
-      <CardContent className="space-y-4 p-4">
+      <CardContent className="space-y-4 p-5">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
             Admin workspace
@@ -31,14 +32,14 @@ export default function AdminSidebar() {
           <p className="mt-1 text-sm font-semibold text-foreground">Clinic operations</p>
         </div>
 
-        <nav className="grid gap-1 sm:grid-cols-2 lg:grid-cols-1">
+        <nav className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-1">
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
 
             return (
               <Link
                 className={cn(
-                  "rounded-lg px-3 py-2 text-sm font-medium transition",
+                  "rounded-lg px-3 py-2.5 text-sm font-medium transition",
                   isActive
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",

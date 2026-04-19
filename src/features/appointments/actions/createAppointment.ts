@@ -13,9 +13,13 @@ export async function createAppointment(
   formData: FormData,
 ): Promise<AppointmentFormState> {
   const parsed = createAppointmentSchema.safeParse({
+    fullName: formData.get("fullName"),
+    email: formData.get("email"),
+    phone: formData.get("phone"),
     serviceId: formData.get("serviceId"),
     slotId: formData.get("slotId") ?? "",
-    scheduledAt: formData.get("scheduledAt") ?? "",
+    appointmentDate: formData.get("appointmentDate") ?? "",
+    appointmentTime: formData.get("appointmentTime") ?? "",
     reason: formData.get("reason") ?? "",
   });
 

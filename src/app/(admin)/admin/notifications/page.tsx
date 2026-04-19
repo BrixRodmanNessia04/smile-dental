@@ -1,37 +1,26 @@
 import Link from "next/link";
 
-import NotificationsPageClient from "@/components/notifications/NotificationsPageClient";
-import { FEATURES } from "@/lib/constants/features";
-import { getMyNotificationsPayload } from "@/features/notifications/services/notification-query.service";
+import Button from "@/components/ui/button";
+import Card, { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default async function Page() {
-  if (!FEATURES.NOTIFICATIONS_ENABLED) {
-    return (
-      <main className="mx-auto w-full max-w-5xl px-6 py-10">
-        <h1 className="text-2xl font-semibold text-foreground">Notifications</h1>
-        <p className="mt-2 rounded-lg border border-border bg-card-strong p-4 text-sm text-muted-foreground">
-          Notifications are temporarily hidden while we fix notification errors. Core admin
-          operations remain available.
-        </p>
-        <div className="mt-4">
-          <Link
-            className="inline-flex rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
-            href="/admin/dashboard"
-          >
-            Back to dashboard
-          </Link>
-        </div>
-      </main>
-    );
-  }
-
-  const result = await getMyNotificationsPayload();
-
+export default function Page() {
   return (
-    <NotificationsPageClient
-      heading="Admin notifications"
-      initialErrorMessage={result.ok ? undefined : result.message}
-      initialPayload={result.ok ? result.data : null}
-    />
+    <main className="space-y-5">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl">Notifications</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="rounded-lg border border-warning-strong/30 bg-warning-soft p-4 text-sm text-warning-strong">
+            Admin notifications UI is temporarily hidden while we stabilize notification workflows.
+          </p>
+          <div className="mt-4">
+            <Button asChild variant="outline">
+              <Link href="/admin/dashboard">Back to dashboard</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </main>
   );
 }

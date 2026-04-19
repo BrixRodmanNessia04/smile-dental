@@ -1,6 +1,10 @@
 import Link from "next/link";
 
 import AppointmentStatusBadge from "@/components/appointments/AppointmentStatusBadge";
+import Button from "@/components/ui/button";
+import Card, { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Input from "@/components/ui/input";
+import Textarea from "@/components/ui/textarea";
 import { approveAppointment } from "@/features/appointments/actions/approveAppointment";
 import { cancelAppointment } from "@/features/appointments/actions/cancelAppointment";
 import { completeAppointment } from "@/features/appointments/actions/completeAppointment";
@@ -26,131 +30,135 @@ export default async function Page({ params }: PageProps) {
   ]);
 
   return (
-    <main className="mx-auto w-full max-w-4xl px-6 py-10">
-      <Link className="text-sm font-medium text-slate-900 underline" href="/admin/appointments">
-        Back to appointments
-      </Link>
+    <main className="space-y-5">
+      <Button asChild variant="outline">
+        <Link href="/admin/appointments">Back to appointments</Link>
+      </Button>
 
       {!appointmentResult.ok ? (
-        <p className="mt-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <p className="rounded-lg border border-destructive/30 bg-destructive-soft p-4 text-sm text-destructive">
           {appointmentResult.message}
         </p>
       ) : (
-        <section className="mt-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h1 className="text-2xl font-semibold text-slate-900">
-                {appointmentResult.data.serviceName ?? appointmentResult.data.serviceId}
-              </h1>
-              <p className="mt-1 text-sm text-slate-600">
-                {appointmentResult.data.appointmentDate}{" "}
-                {appointmentResult.data.startTime}-{appointmentResult.data.endTime}
-              </p>
-              <p className="mt-1 text-xs text-slate-500">
-                Patient profile: {appointmentResult.data.patientProfileId}
-              </p>
-            </div>
-            <AppointmentStatusBadge status={appointmentResult.data.status} />
+        <>
+          <Card>
+            <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <CardTitle className="break-words text-xl">
+                  {appointmentResult.data.serviceName ?? appointmentResult.data.serviceId}
+                </CardTitle>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {appointmentResult.data.appointmentDate} {appointmentResult.data.startTime}-
+                  {appointmentResult.data.endTime}
+                </p>
+                <p className="mt-1 break-all text-xs text-muted-foreground">
+                  Patient profile: {appointmentResult.data.patientProfileId}
+                </p>
+              </div>
+              <AppointmentStatusBadge status={appointmentResult.data.status} />
+            </CardHeader>
+            <CardContent>
+              <dl className="grid gap-4 text-sm sm:grid-cols-3">
+                <div className="rounded-lg border border-border bg-card-strong p-3">
+                  <dt className="font-semibold text-foreground">Reason</dt>
+                  <dd className="mt-1 break-words text-muted-foreground">
+                    {appointmentResult.data.reason || "None"}
+                  </dd>
+                </div>
+                <div className="rounded-lg border border-border bg-card-strong p-3">
+                  <dt className="font-semibold text-foreground">Admin notes</dt>
+                  <dd className="mt-1 break-words text-muted-foreground">
+                    {appointmentResult.data.adminNotes || "None"}
+                  </dd>
+                </div>
+                <div className="rounded-lg border border-border bg-card-strong p-3">
+                  <dt className="font-semibold text-foreground">Cancellation reason</dt>
+                  <dd className="mt-1 break-words text-muted-foreground">
+                    {appointmentResult.data.cancellationReason || "None"}
+                  </dd>
+                </div>
+              </dl>
+            </CardContent>
+          </Card>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Approve</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form action={approveAppointment} className="space-y-3">
+                  <input name="appointmentId" type="hidden" value={appointmentResult.data.id} />
+                  <Textarea name="adminNotes" placeholder="Optional admin notes" rows={3} />
+                  <Button type="submit" variant="accent">Approve appointment</Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Reschedule</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form action={rescheduleAppointment} className="space-y-3">
+                  <input name="appointmentId" type="hidden" value={appointmentResult.data.id} />
+                  <select
+                    className="flex h-11 w-full rounded-lg border border-input bg-background px-3 text-base text-foreground shadow-sm sm:text-sm"
+                    defaultValue=""
+                    name="slotId"
+                  >
+                    <option value="">No pre-defined slot</option>
+                    {slotsResult.ok
+                      ? slotsResult.data.map((slot) => (
+                          <option key={slot.id} value={slot.id}>
+                            {slot.slotDate} {slot.startTime}-{slot.endTime} ({slot.bookedCount}/
+                            {slot.maxCapacity})
+                          </option>
+                        ))
+                      : null}
+                  </select>
+                  <Input
+                    defaultValue={toDateTimeLocalValue(
+                      appointmentResult.data.appointmentDate,
+                      appointmentResult.data.startTime,
+                    )}
+                    name="scheduledAt"
+                    required
+                    type="datetime-local"
+                  />
+                  <Textarea name="adminNotes" placeholder="Reason for reschedule" rows={3} />
+                  <Button type="submit" variant="outline">Reschedule</Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Cancel</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form action={cancelAppointment} className="space-y-3">
+                  <input name="appointmentId" type="hidden" value={appointmentResult.data.id} />
+                  <Textarea name="adminNotes" placeholder="Cancellation reason" rows={3} />
+                  <Button type="submit" variant="destructive">Cancel appointment</Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Complete</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form action={completeAppointment} className="space-y-3">
+                  <input name="appointmentId" type="hidden" value={appointmentResult.data.id} />
+                  <Textarea name="adminNotes" placeholder="Completion notes" rows={3} />
+                  <Button type="submit" variant="primary">Complete appointment</Button>
+                </form>
+              </CardContent>
+            </Card>
           </div>
-
-          <dl className="mt-6 space-y-3 text-sm text-slate-700">
-            <div>
-              <dt className="font-medium text-slate-900">Reason</dt>
-              <dd>{appointmentResult.data.reason || "None"}</dd>
-            </div>
-            <div>
-              <dt className="font-medium text-slate-900">Admin notes</dt>
-              <dd>{appointmentResult.data.adminNotes || "None"}</dd>
-            </div>
-            <div>
-              <dt className="font-medium text-slate-900">Cancellation reason</dt>
-              <dd>{appointmentResult.data.cancellationReason || "None"}</dd>
-            </div>
-          </dl>
-
-          <div className="mt-8 grid gap-4 md:grid-cols-2">
-            <form action={approveAppointment} className="space-y-2 rounded-lg border border-slate-200 p-4">
-              <h2 className="text-sm font-semibold text-slate-900">Approve</h2>
-              <input name="appointmentId" type="hidden" value={appointmentResult.data.id} />
-              <textarea
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
-                name="adminNotes"
-                placeholder="Optional admin notes"
-                rows={3}
-              />
-              <button className="rounded-lg bg-emerald-700 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-600" type="submit">
-                Approve appointment
-              </button>
-            </form>
-
-            <form action={rescheduleAppointment} className="space-y-2 rounded-lg border border-slate-200 p-4">
-              <h2 className="text-sm font-semibold text-slate-900">Reschedule</h2>
-              <input name="appointmentId" type="hidden" value={appointmentResult.data.id} />
-              <select
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
-                defaultValue=""
-                name="slotId"
-              >
-                <option value="">No pre-defined slot</option>
-                {slotsResult.ok
-                  ? slotsResult.data.map((slot) => (
-                      <option key={slot.id} value={slot.id}>
-                        {slot.slotDate} {slot.startTime}-{slot.endTime} ({slot.bookedCount}/
-                        {slot.maxCapacity})
-                      </option>
-                    ))
-                  : null}
-              </select>
-              <input
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
-                defaultValue={toDateTimeLocalValue(
-                  appointmentResult.data.appointmentDate,
-                  appointmentResult.data.startTime,
-                )}
-                name="scheduledAt"
-                required
-                type="datetime-local"
-              />
-              <textarea
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
-                name="adminNotes"
-                placeholder="Reason for reschedule"
-                rows={3}
-              />
-              <button className="rounded-lg bg-sky-700 px-3 py-2 text-sm font-semibold text-white hover:bg-sky-600" type="submit">
-                Reschedule
-              </button>
-            </form>
-
-            <form action={cancelAppointment} className="space-y-2 rounded-lg border border-slate-200 p-4">
-              <h2 className="text-sm font-semibold text-slate-900">Cancel</h2>
-              <input name="appointmentId" type="hidden" value={appointmentResult.data.id} />
-              <textarea
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
-                name="adminNotes"
-                placeholder="Cancellation reason"
-                rows={3}
-              />
-              <button className="rounded-lg bg-rose-700 px-3 py-2 text-sm font-semibold text-white hover:bg-rose-600" type="submit">
-                Cancel appointment
-              </button>
-            </form>
-
-            <form action={completeAppointment} className="space-y-2 rounded-lg border border-slate-200 p-4">
-              <h2 className="text-sm font-semibold text-slate-900">Complete</h2>
-              <input name="appointmentId" type="hidden" value={appointmentResult.data.id} />
-              <textarea
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
-                name="adminNotes"
-                placeholder="Completion notes"
-                rows={3}
-              />
-              <button className="rounded-lg bg-violet-700 px-3 py-2 text-sm font-semibold text-white hover:bg-violet-600" type="submit">
-                Complete appointment
-              </button>
-            </form>
-          </div>
-        </section>
+        </>
       )}
     </main>
   );

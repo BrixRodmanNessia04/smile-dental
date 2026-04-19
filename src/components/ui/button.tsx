@@ -1,4 +1,5 @@
-import type { ButtonHTMLAttributes } from "react";
+import { Slot } from "@radix-ui/react-slot";
+import * as React from "react";
 
 import { cn } from "@/lib/utils/cn";
 
@@ -12,9 +13,10 @@ type ButtonVariant =
   | "default";
 type ButtonSize = "sm" | "md" | "lg";
 
-type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
   size?: ButtonSize;
+  asChild?: boolean;
 };
 
 const variantClasses: Record<ButtonVariant, string> = {
@@ -33,28 +35,32 @@ const variantClasses: Record<ButtonVariant, string> = {
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  sm: "h-9 rounded-lg px-3 text-sm",
-  md: "h-10 rounded-lg px-4 text-sm",
+  sm: "h-11 rounded-lg px-3 text-base sm:h-9 sm:text-sm",
+  md: "h-11 rounded-lg px-4 text-base sm:h-10 sm:text-sm",
   lg: "h-11 rounded-lg px-5 text-base",
 };
 
-export default function Button({
-  className,
-  variant = "primary",
-  size = "md",
-  type = "button",
-  ...props
-}: ButtonProps) {
-  return (
-    <button
-      className={cn(
-        "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2",
-        variantClasses[variant],
-        sizeClasses[size],
-        className,
-      )}
-      type={type}
-      {...props}
-    />
-  );
-}
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant = "primary", size = "md", asChild = false, type, ...props }, ref) => {
+    const Comp = asChild ? Slot : "button";
+
+    return (
+      <Comp
+        className={cn(
+          "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2",
+          variantClasses[variant],
+          sizeClasses[size],
+          className,
+        )}
+        ref={ref}
+        type={asChild ? undefined : (type ?? "button")}
+        {...props}
+      />
+    );
+  },
+);
+
+Button.displayName = "Button";
+
+export { Button };
+export default Button;

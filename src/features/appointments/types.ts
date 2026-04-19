@@ -24,6 +24,20 @@ export type AppointmentServiceOption = {
   id: string;
   name: string;
   durationMinutes: number;
+  description: string | null;
+  basePrice: number | null;
+};
+
+export type AdminServiceItem = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  durationMinutes: number;
+  basePrice: number | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type AppointmentSlotOption = {
@@ -38,9 +52,14 @@ export type AppointmentSlotOption = {
 
 export type AppointmentFieldErrors = {
   appointmentId?: string[];
+  fullName?: string[];
+  email?: string[];
+  phone?: string[];
   serviceId?: string[];
   slotId?: string[];
   scheduledAt?: string[];
+  appointmentDate?: string[];
+  appointmentTime?: string[];
   reason?: string[];
   slotDate?: string[];
   startTime?: string[];

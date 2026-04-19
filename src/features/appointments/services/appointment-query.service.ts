@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
 
 import type {
+  AdminServiceItem,
   Appointment,
   AppointmentServiceOption,
   AppointmentServiceResult,
@@ -41,6 +42,20 @@ const mapService = (row: ServiceRow): AppointmentServiceOption => ({
   id: row.id,
   name: row.name,
   durationMinutes: row.duration_minutes,
+  description: row.description,
+  basePrice: row.base_price,
+});
+
+const mapAdminService = (row: ServiceRow): AdminServiceItem => ({
+  id: row.id,
+  name: row.name,
+  slug: row.slug,
+  description: row.description,
+  durationMinutes: row.duration_minutes,
+  basePrice: row.base_price,
+  isActive: row.is_active,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
 });
 
 const mapSlot = (row: SlotRow): AppointmentSlotOption => ({
@@ -116,6 +131,39 @@ export async function listActiveServices(): Promise<AppointmentServiceResult<App
   return {
     ok: true,
     data: (data ?? []).map(mapService),
+  };
+}
+
+export async function listAdminServices(): Promise<AppointmentServiceResult<AdminServiceItem[]>> {
+  const actorResult = await getActorContext();
+  if (!actorResult.ok) {
+    return actorResult;
+  }
+
+  const { supabase, role } = actorResult.data;
+  if (role !== USER_ROLES.ADMIN) {
+    return {
+      ok: false,
+      message: "You are not allowed to view services.",
+    };
+  }
+
+  const { data, error } = await supabase
+    .from("services")
+    .select("*")
+    .order("is_active", { ascending: false })
+    .order("name", { ascending: true });
+
+  if (error) {
+    return {
+      ok: false,
+      message: "Unable to load services.",
+    };
+  }
+
+  return {
+    ok: true,
+    data: (data ?? []).map(mapAdminService),
   };
 }
 

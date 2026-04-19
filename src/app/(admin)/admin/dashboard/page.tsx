@@ -4,6 +4,7 @@ import AppointmentStatusBadge from "@/components/appointments/AppointmentStatusB
 import PostStatusBadge from "@/components/posts/PostStatusBadge";
 import SectionHeader from "@/components/shared/SectionHeader";
 import StatCard from "@/components/shared/StatCard";
+import Button from "@/components/ui/button";
 import Card, { CardContent, CardHeader } from "@/components/ui/card";
 import EmptyState from "@/components/ui/empty-state";
 import {
@@ -14,7 +15,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { listAdminAppointments } from "@/features/appointments/services/appointment-query.service";
+import {
+  listAdminAppointments,
+  listAdminServices,
+} from "@/features/appointments/services/appointment-query.service";
 import { listAdminPosts } from "@/features/posts/services/post-query.service";
 import { USER_ROLES } from "@/lib/constants/roles";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -28,8 +32,9 @@ const formatDateTime = (date: string, time: string) =>
 export default async function Page() {
   const supabase = await createServerSupabaseClient();
 
-  const [appointmentsResult, postsResult, patientsResult] = await Promise.all([
+  const [appointmentsResult, servicesResult, postsResult, patientsResult] = await Promise.all([
     listAdminAppointments(),
+    listAdminServices(),
     listAdminPosts(),
     supabase
       .from("profiles")
@@ -41,7 +46,9 @@ export default async function Page() {
   const appointments = appointmentsResult.ok ? appointmentsResult.data : [];
   const patients = patientsResult.data ?? [];
   const posts = postsResult.ok ? postsResult.data : [];
+  const services = servicesResult.ok ? servicesResult.data : [];
   const publishedPosts = posts.filter((post) => post.status === "published").length;
+  const activeServices = services.filter((service) => service.isActive).length;
 
   const recentAppointments = [...appointments]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -60,23 +67,20 @@ export default async function Page() {
             </p>
           </div>
           <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
-            <Link
-              className="w-full rounded-lg border border-border px-3 py-2 text-center text-sm font-medium text-foreground transition hover:bg-muted sm:w-auto"
-              href="/admin/appointments"
-            >
-              View Appointments
-            </Link>
-            <Link
-              className="w-full rounded-lg bg-accent px-3 py-2 text-center text-sm font-semibold text-accent-foreground transition hover:brightness-95 sm:w-auto"
-              href="/admin/posts/new"
-            >
-              New Post
-            </Link>
+            <Button asChild className="w-full sm:w-auto" size="md" variant="outline">
+              <Link href="/admin/services">Manage Services</Link>
+            </Button>
+            <Button asChild className="w-full sm:w-auto" size="md" variant="outline">
+              <Link href="/admin/appointments">View Appointments</Link>
+            </Button>
+            <Button asChild className="w-full sm:w-auto" size="md" variant="accent">
+              <Link href="/admin/posts/new">New Post</Link>
+            </Button>
           </div>
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           hint="All appointment records"
           label="Total Appointments"
@@ -88,6 +92,7 @@ export default async function Page() {
           label="Published Posts"
           value={publishedPosts}
         />
+        <StatCard hint="Available for booking" label="Active Services" value={activeServices} />
       </div>
 
       <Card>

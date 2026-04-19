@@ -2,6 +2,7 @@ import { z } from "zod";
 
 const TIME_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+const PHONE_REGEX = /^[0-9+\-() ]{7,20}$/;
 
 const cleanOptionalText = (value: string | null | undefined) => {
   if (!value) {
@@ -14,31 +15,71 @@ const cleanOptionalText = (value: string | null | undefined) => {
 
 export const createAppointmentSchema = z
   .object({
-    serviceId: z.string().uuid("Invalid service."),
+    fullName: z
+      .string()
+      .trim()
+      .min(2, "Name must be at least 2 characters.")
+      .max(120, "Name must be at most 120 characters."),
+    email: z
+      .string()
+      .trim()
+      .email("Enter a valid email address.")
+      .max(160, "Email must be at most 160 characters."),
+    phone: z
+      .string()
+      .trim()
+      .min(7, "Phone number is required.")
+      .max(20, "Phone number is too long.")
+      .regex(PHONE_REGEX, "Enter a valid phone number."),
+    serviceId: z
+      .string()
+      .trim()
+      .min(2, "Select a valid service.")
+      .max(120, "Select a valid service.")
+      .regex(/^[a-z0-9-]+$/i, "Select a valid service."),
     slotId: z
       .string()
       .trim()
       .optional()
       .transform((value) => cleanOptionalText(value)),
-    scheduledAt: z
+    appointmentDate: z
       .string()
       .trim()
       .optional()
-      .transform((value) => cleanOptionalText(value)),
+      .transform((value) => cleanOptionalText(value))
+      .refine((value) => !value || DATE_REGEX.test(value), {
+        message: "Select a valid date.",
+      }),
+    appointmentTime: z
+      .string()
+      .trim()
+      .optional()
+      .transform((value) => cleanOptionalText(value))
+      .refine((value) => !value || TIME_REGEX.test(value), {
+        message: "Select a valid time.",
+      }),
     reason: z
       .string()
       .transform((value) => cleanOptionalText(value))
-      .refine((value) => !value || value.length <= 1000, {
-        message: "Reason must not exceed 1000 characters.",
+      .refine((value) => !value || value.length <= 700, {
+        message: "Notes must not exceed 700 characters.",
       })
       .optional(),
   })
   .superRefine((input, ctx) => {
-    if (!input.slotId && !input.scheduledAt) {
+    if (!input.slotId && !input.appointmentDate) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Select a slot or provide a preferred date and time.",
-        path: ["scheduledAt"],
+        message: "Select a slot or provide a preferred date.",
+        path: ["appointmentDate"],
+      });
+    }
+
+    if (!input.slotId && !input.appointmentTime) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Select a slot or provide a preferred time.",
+        path: ["appointmentTime"],
       });
     }
   });

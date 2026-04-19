@@ -32,6 +32,7 @@ export const ADMIN_ROUTES = {
   DASHBOARD: "/admin/dashboard",
   INSIGHTS: "/admin/insights",
   APPOINTMENTS: "/admin/appointments",
+  SERVICES: "/admin/services",
   NOTIFICATIONS: "/admin/notifications",
   POINTS: "/admin/points",
   POSTS: "/admin/posts",

@@ -1,60 +1,97 @@
 import Link from "next/link";
 
+import AppointmentStatusBadge from "@/components/appointments/AppointmentStatusBadge";
+import Button from "@/components/ui/button";
+import Card, { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { listAdminAppointments } from "@/features/appointments/services/appointment-query.service";
+
+const formatDateTime = (date: string, start: string, end: string) =>
+  new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(`${date}T${start}`)) + ` - ${end.slice(0, 5)}`;
 
 export default async function Page() {
   const appointmentsResult = await listAdminAppointments();
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-6 py-10">
-      <h1 className="text-2xl font-semibold text-slate-900">All appointments</h1>
+    <main className="space-y-5">
+      <Card className="border-primary/20 bg-gradient-to-r from-primary/10 to-background">
+        <CardContent className="flex flex-wrap items-center justify-between gap-3 p-6">
+          <div>
+            <h1 className="text-2xl font-semibold text-foreground">All appointments</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Review and manage appointment requests without layout overflow.
+            </p>
+          </div>
+          <Button asChild variant="outline">
+            <Link href="/admin/appointments/schedule">Manage slots</Link>
+          </Button>
+        </CardContent>
+      </Card>
 
       {!appointmentsResult.ok ? (
-        <p className="mt-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <p className="rounded-lg border border-destructive/30 bg-destructive-soft p-4 text-sm text-destructive">
           {appointmentsResult.message}
         </p>
       ) : appointmentsResult.data.length === 0 ? (
-        <p className="mt-6 rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-600">
+        <p className="rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
           No appointments found.
         </p>
       ) : (
-        <div className="mt-6 overflow-x-auto rounded-lg border border-slate-200 bg-white">
-          <table className="min-w-full divide-y divide-slate-200 text-sm">
-            <thead className="bg-slate-50">
-              <tr className="text-left text-slate-700">
-                <th className="px-4 py-3 font-semibold">Date</th>
-                <th className="px-4 py-3 font-semibold">Time</th>
-                <th className="px-4 py-3 font-semibold">Service</th>
-                <th className="px-4 py-3 font-semibold">Patient</th>
-                <th className="px-4 py-3 font-semibold">Status</th>
-                <th className="px-4 py-3 font-semibold">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200">
-              {appointmentsResult.data.map((appointment) => (
-                <tr key={appointment.id}>
-                  <td className="px-4 py-3">{appointment.appointmentDate}</td>
-                  <td className="px-4 py-3">
-                    {appointment.startTime}-{appointment.endTime}
-                  </td>
-                  <td className="px-4 py-3">
-                    {appointment.serviceName ?? appointment.serviceId}
-                  </td>
-                  <td className="px-4 py-3">{appointment.patientProfileId}</td>
-                  <td className="px-4 py-3">{appointment.status}</td>
-                  <td className="px-4 py-3">
-                    <Link
-                      className="font-medium text-slate-900 underline"
-                      href={`/admin/appointments/${appointment.id}`}
-                    >
-                      View
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Appointment list</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Service</TableHead>
+                  <TableHead>Schedule</TableHead>
+                  <TableHead>Patient ID</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {appointmentsResult.data.map((appointment) => (
+                  <TableRow key={appointment.id}>
+                    <TableCell className="max-w-[16rem] break-words font-medium">
+                      {appointment.serviceName ?? appointment.serviceId}
+                    </TableCell>
+                    <TableCell className="min-w-[15rem] text-muted-foreground">
+                      {formatDateTime(
+                        appointment.appointmentDate,
+                        appointment.startTime,
+                        appointment.endTime,
+                      )}
+                    </TableCell>
+                    <TableCell className="max-w-[14rem] break-all text-muted-foreground">
+                      {appointment.patientProfileId}
+                    </TableCell>
+                    <TableCell>
+                      <AppointmentStatusBadge status={appointment.status} />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button asChild size="sm" variant="ghost">
+                        <Link href={`/admin/appointments/${appointment.id}`}>View</Link>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
     </main>
   );

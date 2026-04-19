@@ -1,3 +1,14 @@
+import Button from "@/components/ui/button";
+import Card, { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Input from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { createAppointmentSlot } from "@/features/appointments/actions/createAppointmentSlot";
 import { listAdminAppointmentSlots } from "@/features/appointments/services/appointment-query.service";
 
@@ -5,86 +16,74 @@ export default async function Page() {
   const slotsResult = await listAdminAppointmentSlots();
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-6 py-10">
-      <h1 className="text-2xl font-semibold text-slate-900">Appointment Schedule</h1>
-      <p className="mt-1 text-sm text-slate-600">
-        Placeholder schedule management with slot creation support.
-      </p>
+    <main className="space-y-5">
+      <Card className="border-primary/20 bg-gradient-to-r from-primary/10 to-background">
+        <CardContent className="p-6">
+          <h1 className="text-2xl font-semibold text-foreground">Appointment schedule</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Manage available slots with cleaner spacing and responsive table layout.
+          </p>
+        </CardContent>
+      </Card>
 
-      <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-base font-semibold text-slate-900">Create slot</h2>
-        <form action={createAppointmentSlot} className="mt-4 grid gap-3 md:grid-cols-4">
-          <input
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900"
-            name="slotDate"
-            required
-            type="date"
-          />
-          <input
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900"
-            name="startTime"
-            required
-            type="time"
-          />
-          <input
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900"
-            name="endTime"
-            required
-            type="time"
-          />
-          <input
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900"
-            defaultValue={1}
-            max={20}
-            min={1}
-            name="maxCapacity"
-            required
-            type="number"
-          />
-          <button
-            className="md:col-span-4 w-fit rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
-            type="submit"
-          >
-            Create slot
-          </button>
-        </form>
-      </section>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Create slot</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form action={createAppointmentSlot} className="grid gap-3 md:grid-cols-4">
+            <Input name="slotDate" required type="date" />
+            <Input name="startTime" required type="time" />
+            <Input name="endTime" required type="time" />
+            <Input defaultValue={1} max={20} min={1} name="maxCapacity" required type="number" />
+            <Button className="md:col-span-4 w-full sm:w-auto" type="submit" variant="accent">
+              Create slot
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
-      <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 className="text-base font-semibold text-slate-900">Slots</h2>
-        {!slotsResult.ok ? (
-          <p className="mt-3 text-sm text-red-700">{slotsResult.message}</p>
-        ) : slotsResult.data.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-600">No slots yet.</p>
-        ) : (
-          <div className="mt-3 overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50">
-                <tr className="text-left text-slate-700">
-                  <th className="px-3 py-2 font-semibold">Date</th>
-                  <th className="px-3 py-2 font-semibold">Time</th>
-                  <th className="px-3 py-2 font-semibold">Capacity</th>
-                  <th className="px-3 py-2 font-semibold">Active</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Slots</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {!slotsResult.ok ? (
+            <p className="rounded-lg border border-destructive/30 bg-destructive-soft p-3 text-sm text-destructive">
+              {slotsResult.message}
+            </p>
+          ) : slotsResult.data.length === 0 ? (
+            <p className="rounded-lg border border-border bg-card-strong p-3 text-sm text-muted-foreground">
+              No slots yet.
+            </p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Time</TableHead>
+                  <TableHead>Capacity</TableHead>
+                  <TableHead>Active</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {slotsResult.data.map((slot) => (
-                  <tr key={slot.id}>
-                    <td className="px-3 py-2">{slot.slotDate}</td>
-                    <td className="px-3 py-2">
+                  <TableRow key={slot.id}>
+                    <TableCell>{slot.slotDate}</TableCell>
+                    <TableCell>
                       {slot.startTime}-{slot.endTime}
-                    </td>
-                    <td className="px-3 py-2">
+                    </TableCell>
+                    <TableCell>
                       {slot.bookedCount}/{slot.maxCapacity}
-                    </td>
-                    <td className="px-3 py-2">{slot.isActive ? "Yes" : "No"}</td>
-                  </tr>
+                    </TableCell>
+                    <TableCell>{slot.isActive ? "Yes" : "No"}</TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </main>
   );
 }

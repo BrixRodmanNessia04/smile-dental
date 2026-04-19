@@ -118,22 +118,33 @@ function ensureRole(role: UserRole | null, expected: UserRole): AppointmentServi
   return { ok: true, data: null };
 }
 
-async function getServiceById(
+async function getServiceByReference(
   supabase: SupabaseClient<Database>,
-  serviceId: string,
+  serviceRef: string,
 ): Promise<ServiceRow | null> {
-  const { data, error } = await supabase
+  const byIdQuery = await supabase
     .from("services")
     .select("*")
-    .eq("id", serviceId)
+    .eq("id", serviceRef)
     .eq("is_active", true)
     .maybeSingle();
 
-  if (error || !data) {
+  if (!byIdQuery.error && byIdQuery.data) {
+    return byIdQuery.data;
+  }
+
+  const bySlugQuery = await supabase
+    .from("services")
+    .select("*")
+    .eq("slug", serviceRef)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (bySlugQuery.error || !bySlugQuery.data) {
     return null;
   }
 
-  return data;
+  return bySlugQuery.data;
 }
 
 async function getSlotById(
@@ -231,7 +242,7 @@ async function buildDateTimeFromInput(
       message: string;
     }
 > {
-  const service = await getServiceById(supabase, input.serviceId);
+  const service = await getServiceByReference(supabase, input.serviceId);
   if (!service) {
     return {
       ok: false,
@@ -416,9 +427,14 @@ export async function createPatientAppointment(
     return roleCheck;
   }
 
+  const scheduledAt =
+    input.appointmentDate && input.appointmentTime
+      ? `${input.appointmentDate}T${input.appointmentTime}`
+      : undefined;
+
   const timeResult = await buildDateTimeFromInput(supabase, {
     slotId: input.slotId,
-    scheduledAt: input.scheduledAt,
+    scheduledAt,
     serviceId: input.serviceId,
   });
 
@@ -427,6 +443,21 @@ export async function createPatientAppointment(
   }
 
   const { slot, appointmentDate, startTime, endTime, service } = timeResult.data;
+  const reasonValue = [
+    `Name: ${input.fullName}`,
+    `Email: ${input.email}`,
+    `Phone: ${input.phone}`,
+    input.reason ? `Notes: ${input.reason}` : null,
+  ]
+    .filter(Boolean)
+    .join(" | ");
+
+  if (reasonValue.length > 1000) {
+    return {
+      ok: false,
+      message: "Your booking notes are too long. Please shorten and submit again.",
+    };
+  }
 
   if (slot) {
     const reserved = await adjustSlotBookedCount(supabase, slot.id, 1);
@@ -448,7 +479,7 @@ export async function createPatientAppointment(
       start_time: startTime,
       end_time: endTime,
       status: APPOINTMENT_STATUS.PENDING,
-      reason: input.reason ?? null,
+      reason: reasonValue,
     })
     .select("*")
     .single();
