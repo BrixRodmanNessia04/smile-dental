@@ -56,7 +56,7 @@ export default function ServicesSection({
               iconTone={index % 2 === 0 ? "primary" : "accent"}
               key={service.slug}
               name={service.name}
-              priceLabel={service.priceLabel ?? null}
+              // priceLabel={service.priceLabel ?? null}
               serviceSlug={service.slug}
             />
           ))}

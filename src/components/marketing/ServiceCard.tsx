@@ -73,13 +73,13 @@ export default function ServiceCard({
   name,
   description,
   durationMinutes,
-  basePrice,
-  priceLabel,
+  // basePrice,
+  // priceLabel,
   iconKey,
   iconTone = "primary",
 }: ServiceCardProps) {
-  const price = formatPrice(basePrice);
-  const pricing = priceLabel ?? price;
+  // const price = formatPrice(basePrice);
+  // const pricing = priceLabel ?? price;
 
   return (
     <Card
@@ -93,7 +93,7 @@ export default function ServiceCard({
           </div>
           <div className="flex flex-wrap justify-end gap-1.5">
             {durationMinutes ? <Badge variant="primary">{durationMinutes} min</Badge> : null}
-            {pricing ? <Badge variant="accent">{pricing}</Badge> : null}
+            {/* {pricing ? <Badge variant="accent">{pricing}</Badge> : null} */}
           </div>
         </div>
 
