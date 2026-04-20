@@ -15,7 +15,7 @@ export const metadata: Metadata = buildPageMetadata({
 
 export default function Page() {
   return (
-    <main className="mx-auto w-full max-w-7xl space-y-8 px-4 py-8 md:px-6 md:py-10 lg:px-8 lg:py-12">
+    <main className="marketing-page mx-auto w-full max-w-7xl space-y-8 px-4 py-8 md:px-6 md:py-10 lg:px-8 lg:py-12">
       <section className="rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-8">
         <p className="text-xs font-semibold uppercase tracking-[0.08em] text-primary">One Dental services</p>
         <h1 className="mt-2 text-3xl font-semibold leading-tight text-primary sm:text-4xl">
@@ -44,6 +44,7 @@ export default function Page() {
         ]}
         description="Need help choosing the right treatment? Our team can guide you through options based on your concerns, lifestyle, and timeline."
         eyebrow="Need guidance?"
+        learnMoreSlug="service-planning-support"
         title="We help you choose the right treatment path"
         visualLabel="Service Planning Support"
       />

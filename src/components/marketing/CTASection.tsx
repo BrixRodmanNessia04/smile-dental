@@ -17,10 +17,10 @@ export default function CTASection() {
         </p>
 
         <div className="mt-7 flex flex-col justify-center gap-2 sm:flex-row">
-          <Button asChild className="w-full sm:w-auto" size="lg" variant="outline">
+          <Button asChild className="marketing-button-hover w-full sm:w-auto" size="lg" variant="outline">
             <Link href={MARKETING_ROUTES.SERVICES}>View Services</Link>
           </Button>
-          <Button asChild className="w-full sm:w-auto" size="lg" variant="accent">
+          <Button asChild className="marketing-button-hover w-full sm:w-auto" size="lg" variant="accent">
             <Link href={MARKETING_ROUTES.BOOK_APPOINTMENT}>Book Appointment</Link>
           </Button>
         </div>

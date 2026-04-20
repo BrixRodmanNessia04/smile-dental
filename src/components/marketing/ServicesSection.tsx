@@ -34,12 +34,12 @@ export default function ServicesSection({
         </div>
         <div className="flex flex-wrap gap-2">
           {showViewAll ? (
-            <Button asChild size="sm" variant="outline">
+            <Button asChild className="marketing-button-hover" size="sm" variant="outline">
               <Link href={MARKETING_ROUTES.SERVICES}>View all services</Link>
             </Button>
           ) : null}
           {showBookCta ? (
-            <Button asChild size="sm" variant="accent">
+            <Button asChild className="marketing-button-hover" size="sm" variant="accent">
               <Link href={MARKETING_ROUTES.BOOK_APPOINTMENT}>Book Appointment</Link>
             </Button>
           ) : null}

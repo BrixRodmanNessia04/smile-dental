@@ -39,7 +39,7 @@ const MESSENGER_URL = "https://m.me/page-username";
 
 export default function Page() {
   return (
-    <main className="mx-auto w-full max-w-7xl space-y-8 px-4 py-8 md:px-6 md:py-10 lg:px-8 lg:py-12">
+    <main className="marketing-page mx-auto w-full max-w-7xl space-y-8 px-4 py-8 md:px-6 md:py-10 lg:px-8 lg:py-12">
       <section className="rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-8">
         <p className="text-xs font-semibold uppercase tracking-[0.08em] text-primary">About One Dental</p>
         <h1 className="mt-2 text-3xl font-semibold leading-tight text-primary sm:text-4xl">
@@ -52,8 +52,8 @@ export default function Page() {
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-        <Card>
-          <CardContent className="p-5 sm:p-6">
+        <Card className="marketing-card-hover">
+          <CardContent className="p-5 pt-5 sm:p-6">
             <h2 className="text-2xl font-semibold text-primary">Our mission and values</h2>
             <p className="mt-2 text-sm text-muted-foreground sm:text-base">
               We combine compassionate service with modern dentistry so patients receive long-term
@@ -62,7 +62,7 @@ export default function Page() {
 
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
               {VALUES.map((value) => (
-                <article className="rounded-xl border border-border bg-card-strong p-4" key={value.title}>
+                <article className="marketing-card-hover rounded-xl border border-border bg-card-strong p-4" key={value.title}>
                   <h3 className="text-sm font-semibold text-foreground">{value.title}</h3>
                   <p className="mt-2 text-sm text-muted-foreground">{value.description}</p>
                 </article>
@@ -71,8 +71,8 @@ export default function Page() {
           </CardContent>
         </Card>
 
-        <Card className="border-primary/20 bg-gradient-to-br from-primary/10 via-card to-primary/5">
-          <CardContent className="p-5 sm:p-6">
+        <Card className="marketing-card-hover border-primary/20 bg-gradient-to-br from-primary/10 via-card to-primary/5">
+          <CardContent className="p-5 pt-5 sm:p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.08em] text-primary">Need quick assistance?</p>
             <h2 className="mt-2 text-2xl font-semibold text-primary">Chat with us on Messenger</h2>
             <p className="mt-2 text-sm text-muted-foreground">
@@ -80,7 +80,7 @@ export default function Page() {
               as soon as possible during clinic hours.
             </p>
             <div className="mt-5">
-              <Button asChild className="w-full" size="lg" variant="accent">
+              <Button asChild className="marketing-button-hover w-full" size="lg" variant="accent">
                 <a href={MESSENGER_URL} rel="noreferrer" target="_blank">
                   Chat with us
                 </a>
@@ -99,6 +99,7 @@ export default function Page() {
         ]}
         description="Our care model is designed to support patients beyond one-time procedures. We focus on long-term relationships and healthier smiles through continuity of care."
         eyebrow="Patient-first approach"
+        learnMoreSlug="patient-first-care"
         title="We care for people, not just teeth"
         visualLabel="Patient-first One Dental Experience"
       />
@@ -109,7 +110,7 @@ export default function Page() {
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {TEAM.map((member) => (
-            <Card className="rounded-2xl border-border bg-card-strong" key={member.name}>
+            <Card className="marketing-card-hover rounded-2xl border-border bg-card-strong" key={member.name}>
               <CardContent className="p-5">
                 <div className="h-28 rounded-xl bg-gradient-to-br from-primary/20 via-card to-accent/15" />
                 <h3 className="mt-4 text-lg font-semibold text-foreground">{member.name}</h3>

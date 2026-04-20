@@ -5,6 +5,7 @@ export const MARKETING_ROUTES = {
   UPDATES: "/updates",
   CONTACT: "/contact",
   BOOK_APPOINTMENT: "/book-appointment",
+  LEARN_MORE: "/learn-more",
 } as const;
 
 export const AUTH_ROUTES = {

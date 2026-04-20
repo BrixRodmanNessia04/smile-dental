@@ -42,12 +42,6 @@ export default function TestimonialsSection() {
             Real experiences from One Dental patients who value comfort, clarity, and quality care.
           </p>
         </div>
-        <Card className="rounded-xl border-border bg-card-strong">
-          <CardContent className="p-3 text-right">
-            <p className="text-xl font-semibold text-primary">4.9 / 5</p>
-            <p className="text-xs text-muted-foreground">Over 350 verified reviews</p>
-          </CardContent>
-        </Card>
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">

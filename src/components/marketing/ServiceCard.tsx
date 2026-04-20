@@ -83,10 +83,10 @@ export default function ServiceCard({
 
   return (
     <Card
-      className="h-full overflow-hidden rounded-2xl border-border bg-card shadow-[0_18px_46px_-34px_hsl(var(--shadow))]"
+      className="marketing-card-hover h-full overflow-hidden rounded-2xl border-border bg-card shadow-[0_18px_46px_-34px_hsl(var(--shadow))]"
       id={serviceSlug}
     >
-      <CardContent className="flex h-full flex-col p-5 sm:p-6">
+      <CardContent className="flex h-full flex-col p-5 pt-5 sm:p-6">
         <div className="flex items-start justify-between gap-3">
           <div className="inline-flex rounded-2xl bg-primary/10 p-1.5">
             <ServiceIcon iconKey={iconKey} tone={iconTone} />
@@ -101,8 +101,13 @@ export default function ServiceCard({
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground break-words">{description}</p>
 
         <div className="mt-5">
-          <Button asChild className="w-full sm:w-auto" size="sm" variant="outline">
-            <Link href={`${MARKETING_ROUTES.SERVICES}#${serviceSlug}`}>Learn More</Link>
+          <Button
+            asChild
+            className="marketing-button-hover w-full sm:w-auto"
+            size="sm"
+            variant="outline"
+          >
+            <Link href={`${MARKETING_ROUTES.LEARN_MORE}/${serviceSlug}`}>Learn More</Link>
           </Button>
         </div>
       </CardContent>

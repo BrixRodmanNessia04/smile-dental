@@ -24,7 +24,7 @@ export const STATIC_MARKETING_SERVICES: MarketingService[] = [
     longDescription:
       "Regular checkups, scaling, and personalized oral hygiene guidance to maintain long-term dental health.",
     durationMinutes: 45,
-    priceLabel: "From $80",
+    priceLabel: "From ₱80",
     iconKey: "preventive",
   },
   {
@@ -34,7 +34,7 @@ export const STATIC_MARKETING_SERVICES: MarketingService[] = [
     longDescription:
       "Options such as veneers, bonding, and smile design to enhance the look and symmetry of your teeth.",
     durationMinutes: 60,
-    priceLabel: "From $180",
+    priceLabel: "From ₱180",
     iconKey: "cosmetic",
   },
   {
@@ -44,7 +44,7 @@ export const STATIC_MARKETING_SERVICES: MarketingService[] = [
     longDescription:
       "Crowns, fillings, and other restorative procedures designed for function, comfort, and longevity.",
     durationMinutes: 75,
-    priceLabel: "From $220",
+    priceLabel: "From ₱220",
     iconKey: "restorative",
   },
   {
@@ -54,7 +54,7 @@ export const STATIC_MARKETING_SERVICES: MarketingService[] = [
     longDescription:
       "In-clinic whitening designed to safely lift stains and deliver noticeable results in less time.",
     durationMinutes: 45,
-    priceLabel: "From $160",
+    priceLabel: "From ₱160",
     iconKey: "whitening",
   },
   {
@@ -74,7 +74,7 @@ export const STATIC_MARKETING_SERVICES: MarketingService[] = [
     longDescription:
       "Clear aligner and braces evaluations to plan correction with comfort and long-term oral benefits.",
     durationMinutes: 60,
-    priceLabel: "From $120",
+    priceLabel: "From ₱120",
     iconKey: "orthodontics",
   },
 ];

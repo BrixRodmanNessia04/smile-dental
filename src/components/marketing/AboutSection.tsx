@@ -14,7 +14,10 @@ export default function AboutSection() {
     <section className="rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8" id="about">
       <SectionHeader
         action={
-          <Link className="text-sm font-semibold text-primary transition hover:text-primary-strong" href={MARKETING_ROUTES.ABOUT}>
+          <Link
+            className="marketing-button-hover inline-flex rounded-lg px-1 text-sm font-semibold text-primary transition hover:text-primary-strong"
+            href={`${MARKETING_ROUTES.LEARN_MORE}/about-one-dental`}
+          >
             Learn More
           </Link>
         }
@@ -23,33 +26,33 @@ export default function AboutSection() {
       />
 
       <div className="mt-6 grid gap-4 lg:grid-cols-[1.2fr_1fr]">
-        <article className="rounded-lg border border-border bg-card-strong p-5">
+        <article className="marketing-card-hover rounded-lg border border-border bg-card-strong p-5">
           <h3 className="text-base font-semibold text-foreground">A clinic built around trust</h3>
           <p className="mt-2 text-sm text-muted-foreground">
             Our care model emphasizes transparent treatment plans, preventive education, and gentle
             chairside support so every patient feels informed and confident.
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-lg border border-border bg-background p-3">
+            <div className="marketing-card-hover rounded-lg border border-border bg-background p-3">
               <p className="text-xl font-semibold text-foreground">98%</p>
               <p className="text-xs text-muted-foreground">Patient satisfaction</p>
             </div>
-            <div className="rounded-lg border border-border bg-background p-3">
+            <div className="marketing-card-hover rounded-lg border border-border bg-background p-3">
               <p className="text-xl font-semibold text-foreground">24h</p>
               <p className="text-xs text-muted-foreground">Response turnaround</p>
             </div>
-            <div className="rounded-lg border border-border bg-background p-3">
+            <div className="marketing-card-hover rounded-lg border border-border bg-background p-3">
               <p className="text-xl font-semibold text-foreground">6 days</p>
               <p className="text-xs text-muted-foreground">Weekly availability</p>
             </div>
           </div>
         </article>
 
-        <article className="rounded-lg border border-border bg-background p-5">
+        <article className="marketing-card-hover rounded-lg border border-border bg-background p-5">
           <h3 className="text-base font-semibold text-foreground">Our dental team</h3>
           <div className="mt-3 space-y-3">
             {DOCTORS.map((doctor) => (
-              <div className="rounded-lg border border-border bg-card p-3" key={doctor.name}>
+              <div className="marketing-card-hover rounded-lg border border-border bg-card p-3" key={doctor.name}>
                 <p className="text-sm font-semibold text-foreground">{doctor.name}</p>
                 <p className="text-xs text-muted-foreground">{doctor.role}</p>
               </div>

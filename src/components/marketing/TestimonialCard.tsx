@@ -19,7 +19,7 @@ export default function TestimonialCard({
 }: TestimonialCardProps) {
   return (
     <Card className="h-full rounded-2xl border-border bg-card shadow-[0_16px_40px_-34px_hsl(var(--shadow))]">
-      <CardContent className="flex h-full flex-col p-5 sm:p-6">
+      <CardContent className="flex h-full flex-col p-5 pt-5 sm:p-6">
         <div className="mb-4 inline-flex items-center gap-1 text-accent" aria-hidden="true">
           {Array.from({ length: 5 }).map((_, index) => (
             <svg className="h-4 w-4" fill="currentColor" key={index} viewBox="0 0 20 20">

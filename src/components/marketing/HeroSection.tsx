@@ -26,15 +26,15 @@ export default function HeroSection() {
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-              <Button asChild className="w-full sm:w-auto" size="lg" variant="accent">
+              <Button asChild className="marketing-button-hover w-full sm:w-auto" size="lg" variant="accent">
                 <Link href={MARKETING_ROUTES.BOOK_APPOINTMENT}>Book Appointment</Link>
               </Button>
-              <Button asChild className="w-full sm:w-auto" size="lg" variant="outline">
+              <Button asChild className="marketing-button-hover w-full sm:w-auto" size="lg" variant="outline">
                 <Link href={MARKETING_ROUTES.SERVICES}>View Services</Link>
               </Button>
             </div>
 
-            <div className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border/80 bg-background/78 px-3 py-2 shadow-sm backdrop-blur-sm">
+            {/* <div className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border/80 bg-background/78 px-3 py-2 shadow-sm backdrop-blur-sm">
               <div className="flex items-center gap-2 text-accent" aria-hidden="true">
                 {Array.from({ length: 5 }).map((_, index) => (
                   <svg className="h-3.5 w-3.5" fill="currentColor" key={index} viewBox="0 0 20 20">
@@ -46,11 +46,11 @@ export default function HeroSection() {
                 <p className="text-sm font-semibold leading-none text-primary">4.9/5 rating</p>
                 <p className="mt-1 text-xs text-muted-foreground">350+ verified patient reviews</p>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
 
-        <div className="relative overflow-hidden rounded-[1.7rem] border border-border/65 bg-secondary/20 shadow-[0_24px_52px_-42px_hsl(var(--shadow))]">
+        <div className="marketing-card-hover relative overflow-hidden rounded-[1.7rem] border border-border/65 bg-secondary/20 shadow-[0_24px_52px_-42px_hsl(var(--shadow))]">
           <div className="relative aspect-[4/3] w-full sm:aspect-[16/11] lg:aspect-[5/4]">
             <Image
               alt="Dentist providing treatment to a smiling patient at One Dental"
@@ -63,13 +63,6 @@ export default function HeroSection() {
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-primary/22 via-transparent to-card/8" />
             <div className="absolute left-4 top-4 rounded-full bg-background/82 px-3 py-1 text-xs font-semibold text-primary backdrop-blur-sm">
               Patient-first care
-            </div>
-
-            <div className="absolute inset-x-4 bottom-4 rounded-xl border border-border/70 bg-background/80 p-3 backdrop-blur-sm sm:p-4">
-              <p className="text-sm font-semibold text-primary">Appointments available this week</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Easy online booking with confirmation from our clinic team.
-              </p>
             </div>
           </div>
         </div>

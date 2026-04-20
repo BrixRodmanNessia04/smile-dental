@@ -24,7 +24,7 @@ function SheetPortal({ ...props }: React.ComponentProps<typeof DialogPrimitive.P
 function SheetOverlay({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
   return (
     <DialogPrimitive.Overlay
-      className={cn("fixed inset-0 z-50 bg-foreground/45 backdrop-blur-[1px]", className)}
+      className={cn("sheet-overlay fixed inset-0 z-50 bg-foreground/45 backdrop-blur-[1px]", className)}
       {...props}
     />
   );
@@ -54,10 +54,11 @@ function SheetContent({
       <SheetOverlay />
       <DialogPrimitive.Content
         className={cn(
-          "fixed z-50 bg-card p-5 text-card-foreground shadow-xl",
+          "sheet-content fixed z-50 bg-card p-5 text-card-foreground shadow-xl",
           sideClassName[side],
           className,
         )}
+        data-side={side}
         {...props}
       >
         {children}

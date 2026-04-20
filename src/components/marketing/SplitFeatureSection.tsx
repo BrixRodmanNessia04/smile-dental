@@ -1,7 +1,9 @@
 import Image from "next/image";
+import Link from "next/link";
 
-import Card, { CardContent } from "@/components/ui/card";
+import Button from "@/components/ui/button";
 import { IMAGES } from "@/lib/constants/images";
+import { MARKETING_ROUTES } from "@/lib/constants/routes";
 
 type SplitFeatureSectionProps = {
   eyebrow: string;
@@ -12,6 +14,8 @@ type SplitFeatureSectionProps = {
   visualLabel?: string;
   imageSrc?: string;
   imageAlt?: string;
+  learnMoreSlug?: string;
+  learnMoreLabel?: string;
 };
 
 export default function SplitFeatureSection({
@@ -20,9 +24,11 @@ export default function SplitFeatureSection({
   description,
   bullets,
   align = "left",
-  visualLabel = "Clinic Visual Placeholder",
+  visualLabel = "One Dental Clinic",
   imageSrc = IMAGES.home.preventive,
   imageAlt = "Patient receiving gentle dental care at One Dental",
+  learnMoreSlug,
+  learnMoreLabel = "Learn More",
 }: SplitFeatureSectionProps) {
   return (
     <section className="rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-8">
@@ -43,23 +49,31 @@ export default function SplitFeatureSection({
               </li>
             ))}
           </ul>
+          {learnMoreSlug ? (
+            <div className="pt-2">
+              <Button
+                asChild
+                className="marketing-button-hover w-full sm:w-auto"
+                size="sm"
+                variant="outline"
+              >
+                <Link href={`${MARKETING_ROUTES.LEARN_MORE}/${learnMoreSlug}`}>
+                  {learnMoreLabel}
+                </Link>
+              </Button>
+            </div>
+          ) : null}
         </div>
 
-        <Card className="overflow-hidden rounded-2xl border-border bg-secondary/30">
-          <CardContent className="p-0">
-            <div className="relative aspect-[16/10] w-full">
-              <Image alt={imageAlt} className="object-cover" fill sizes="(max-width: 1024px) 100vw, 50vw" src={imageSrc} />
-              <div className="absolute inset-0 bg-gradient-to-tr from-primary/18 via-transparent to-card/25" />
-              <div className="absolute left-4 top-4 rounded-full bg-card/90 px-3 py-1 text-xs font-semibold text-primary shadow-sm backdrop-blur-sm">
-                One Dental
-              </div>
-              <div className="absolute bottom-4 left-4 right-4 rounded-xl border border-border/80 bg-card/88 p-3 backdrop-blur-sm sm:p-4">
-                <p className="text-sm font-semibold text-foreground">{visualLabel}</p>
-                <p className="mt-1 text-xs text-muted-foreground">Temporary photo placeholder for final clinic media.</p>
-              </div>
+        <div className="marketing-card-hover relative overflow-hidden rounded-[1.7rem] border border-border/65 bg-secondary/20 shadow-[0_24px_52px_-42px_hsl(var(--shadow))]">
+          <div className="relative aspect-[4/3] w-full sm:aspect-[16/11] lg:aspect-[5/4]">
+            <Image alt={imageAlt} className="object-cover" fill sizes="(max-width: 1024px) 100vw, 50vw" src={imageSrc} />
+            <div className="absolute inset-0 bg-gradient-to-tr from-primary/22 via-transparent to-card/10" />
+            <div className="absolute left-4 top-4 rounded-full bg-background/82 px-3 py-1 text-xs font-semibold text-primary backdrop-blur-sm">
+              {visualLabel}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </section>
   );
