@@ -1,4 +1,4 @@
-const DEFAULT_SITE_URL = "https://example.com";
+const DEFAULT_SITE_URL = "https://onedentalclinic.vercel.app";
 
 export function getSiteBaseUrl({ required = false } = {}) {
   const rawBaseUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();

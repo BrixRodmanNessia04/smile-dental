@@ -17,7 +17,7 @@ export function buildOpenGraph(input: OpenGraphInput): Metadata["openGraph"] {
     url: toAbsoluteUrl(input.path),
     title: input.title,
     description: input.description,
-    siteName: "One Dental",
+    siteName: "One Dental Clinic",
     images: [
       {
         url: toAbsoluteUrl(input.imagePath ?? DEFAULT_OG_IMAGE_PATH),
