@@ -1,12 +1,4 @@
-const getBaseUrl = () => {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-
-  if (!baseUrl) {
-    throw new Error("NEXT_PUBLIC_SITE_URL is not set");
-  }
-
-  return baseUrl.replace(/\/+$/, "");
-};
+import { getSiteBaseUrl } from "@/lib/seo/url";
 
 export type LocalBusinessJsonLdData = {
   "@context": "https://schema.org";
@@ -34,7 +26,7 @@ export type LocalBusinessJsonLdData = {
 };
 
 export function buildLocalBusinessJsonLd(): LocalBusinessJsonLdData {
-  const baseUrl = getBaseUrl();
+  const baseUrl = getSiteBaseUrl({ required: true });
   const logoUrl = `${baseUrl}/images/brand/one-dental-logo.svg`;
   const clinicImageUrl = `${baseUrl}/images/clinic/clinic-front.jpg`;
 

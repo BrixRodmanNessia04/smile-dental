@@ -1,9 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const getBaseUrl = () => {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  return baseUrl && baseUrl.length > 0 ? baseUrl : "https://example.com";
-};
+import { getSiteBaseUrl } from "@/lib/seo/url";
 
 const PUBLIC_MARKETING_PATHS = [
   "/",
@@ -16,7 +13,7 @@ const PUBLIC_MARKETING_PATHS = [
 export function buildMarketingSitemapEntries(
   now = new Date(),
 ): MetadataRoute.Sitemap {
-  const baseUrl = getBaseUrl();
+  const baseUrl = getSiteBaseUrl();
 
   return PUBLIC_MARKETING_PATHS.map((path) => ({
     url: new URL(path, baseUrl).toString(),

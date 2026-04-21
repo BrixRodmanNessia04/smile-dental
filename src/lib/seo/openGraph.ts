@@ -1,13 +1,8 @@
 import type { Metadata } from "next";
 
+import { toAbsoluteUrl } from "@/lib/seo/url";
+
 const DEFAULT_OG_IMAGE_PATH = "/images/og-default.jpg";
-
-const getBaseUrl = () => {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  return baseUrl && baseUrl.length > 0 ? baseUrl : "https://example.com";
-};
-
-const toAbsoluteUrl = (path: string) => new URL(path, getBaseUrl()).toString();
 
 export type OpenGraphInput = {
   title: string;

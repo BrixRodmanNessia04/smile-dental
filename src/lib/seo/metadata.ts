@@ -1,13 +1,7 @@
 import type { Metadata } from "next";
 
 import { buildOpenGraph, buildTwitterCard } from "@/lib/seo/openGraph";
-
-const getBaseUrl = () => {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  return baseUrl && baseUrl.length > 0 ? baseUrl : "https://example.com";
-};
-
-const toAbsoluteUrl = (path: string) => new URL(path, getBaseUrl()).toString();
+import { toAbsoluteUrl } from "@/lib/seo/url";
 
 export type PageSeoInput = {
   title: string;
